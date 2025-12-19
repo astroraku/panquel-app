@@ -1,0 +1,31 @@
+npm run tauri dev
+
+..\venv\Scripts\activate
+python manage.py runserver
+
+
+| Elemento                         | Color                   |
+| -------------------------------- | ----------------------- |
+| Fondo general                    | `#f8f1e7` (crema)       |
+| Tarjetas / cajas                 | `#fff8f0` (crema clara) |
+| Café claro                       | `#c49a6c`               |
+| Café medio                       | `#8b5e34`               |
+| Café oscuro                      | `#5a3825`               |
+| Botón verde reemplazado por café | `#8b5e34`               |
+| Hover                            | tono más oscuro         |
+
+conectar luego
+# Pendientes de conexión BD
+
+## Login
+- Login.jsx
+- Endpoint /api/login/
+- JWT / sesión
+
+## Sidebar
+- Sidebar.jsx
+- Endpoint /api/ordenes-activas/
+
+## Nueva Orden
+- NuevaOrden.jsx
+- POST /api/ordenes/

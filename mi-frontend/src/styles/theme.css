@@ -1,0 +1,103 @@
+:root {
+  --fondo: #f3e9dd;
+  --tarjeta: #fff8f0;
+
+  --cafe-claro: #c49a6c;
+  --cafe-medio: #8b5e34;
+  --cafe-oscuro: #5a3825;
+
+  --borde: #d9c5a3;
+  --header-tabla: #e6d5bd;
+}
+
+/* ---------- BASE ---------- */
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--cafe-oscuro);
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* ---------- TÍTULOS ---------- */
+.titulo,
+h1, h2, h3 {
+  color: var(--cafe-oscuro);
+}
+
+/* ---------- BOTONES ---------- */
+button {
+  background: var(--cafe-medio);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+button:hover {
+  background: var(--cafe-oscuro);
+}
+
+/* ---------- INPUTS ---------- */
+input, select {
+  background: var(--tarjeta);
+  border: 1px solid var(--cafe-claro);
+  border-radius: 6px;
+  padding: 8px;
+  color: var(--cafe-oscuro);
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--cafe-medio);
+}
+
+/* ---------- TABLAS ---------- */
+.tabla-contenedor,
+.tabla-contenedorNO {
+  background: var(--tarjeta);
+  padding: 15px;
+  border-radius: 12px;
+  border: 2px solid var(--borde);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: var(--header-tabla);
+}
+
+th {
+  padding: 10px;
+  border: 1px solid var(--borde);
+}
+
+td {
+  padding: 8px;
+  border: 1px solid var(--header-tabla);
+}
+
+/* ---------- MODALES ---------- */
+.modal-overlay,
+.modal-overlayNO {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal,
+.modalNO {
+  background: var(--tarjeta);
+  padding: 25px;
+  border-radius: 14px;
+  border: 2px solid var(--cafe-claro);
+  box-shadow: 0 4px 20px rgba(0,0,0,.25);
+}

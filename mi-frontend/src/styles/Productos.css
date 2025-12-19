@@ -1,0 +1,23 @@
+.productos-dashboard {
+  padding: 15px 20px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.dash-card {
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--cafe-medio);
+  color: white;
+  text-align: center;
+  font-weight: bold;
+}
+
+.dash-num {
+  font-size: 40px;
+  margin-top: 10px;
+}

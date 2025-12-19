@@ -1,0 +1,120 @@
+/* Fondo general */
+.login-contenedor {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f8f1e7; /* crema */
+}
+
+/* Animación de entrada */
+.login-card {
+  width: 320px;
+  padding: 10px 25px 25px; /* antes 25px en todos lados */
+  background: #fff8f0;
+  border-radius: 14px;
+  border: 2px solid #c49a6c;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #5a3825;
+
+  opacity: 0;
+  transform: translateY(-15px);
+  transition: all 0.5s ease;
+}
+
+.login-card.mostrar {
+  opacity: 1;
+  transform: translateY(0px);
+}
+
+/* Logo arriba */
+/* Logo arriba */
+.login-logo {
+  width: 110px;
+  height: 110px;
+
+  display: block;          /* elimina espacios arriba/abajo */
+  margin: 0 auto 5px auto; /* centrado con poco espacio abajo */
+  padding: 0;
+
+  object-fit: cover;       /* llena el círculo */
+  border-radius: 50%;      /* círculo perfecto */
+
+  border: 2px solid #c49a6c;
+}
+
+/* Card con menos espacio arriba */
+.login-card {
+  width: 320px;
+  padding: 5px 25px 25px; /* antes 25px en todos lados */
+  background: #fff8f0;
+  border-radius: 14px;
+  border: 2px solid #c49a6c;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #5a3825;
+  opacity: 0;
+  transform: translateY(-15px);
+  transition: all 0.5s ease;
+  padding-bottom: 8px;
+}
+
+
+/* Título */
+.login-card h2 {
+  display: block;          /* elimina espacios arriba/abajo */
+  margin: 0 auto 5px auto;
+  text-align: center;
+  margin-bottom: 5px;
+  color: #5a3825;
+  font-weight: bold;
+}
+
+/* Inputs */
+.login-card input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid #c49a6c;
+  background: #fff;
+  font-size: 16px;
+  color: #5a3825;
+  outline: none;
+}
+
+.login-card input:focus {
+  border-color: #8b5e34;
+}
+
+/* Botón */
+.login-card button {
+  padding: 10px;
+  background: #8b5e34;
+  color: #fff8f0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: bold;
+  transition: 0.25s ease;
+}
+
+.login-card button:hover {
+  background: #5a3825;
+}
+
+/* Error */
+.error {
+  color: #b33939;
+  text-align: center;
+  font-size: 15px;
+}
+
+/* Ocultar scrollbar */
+body::-webkit-scrollbar {
+  width: 0;
+}

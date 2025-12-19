@@ -1,0 +1,42 @@
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+.contenido {
+  flex: 1;
+  padding: 20px;
+}
+
+/* ---------- SIDEBAR ---------- */
+.sidebar {
+  width: 60px;
+  background: var(--tarjeta);
+  border-right: 1px solid var(--cafe-claro);
+  padding: 20px 10px;
+  transition: width 0.3s ease;
+  overflow: hidden;
+}
+
+.sidebar.abierto {
+  width: 220px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-item {
+  background: #fffdf9;
+  border: 1px solid #e5d3b3;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.menu-item:hover {
+  background: #f0e2d0;
+}

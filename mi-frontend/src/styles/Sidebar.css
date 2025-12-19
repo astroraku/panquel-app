@@ -1,0 +1,106 @@
+/* --- SIDEBAR GENERAL --- */
+.sidebar {
+  width: 60px;
+  height: 100vh;
+  background: #fff8f0; /* Crema */
+  padding: 20px 10px;
+  border-right: 1px solid #c49a6c; /* Café claro */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar.abierto {
+  width: 220px;
+}
+
+/* Botón para abrir/cerrar */
+.toggle-btn {
+  background: #8b5e34; /* Café medio */
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  width: 100%;
+  transition: 0.2s ease;
+}
+
+.toggle-btn:hover {
+  background-color: #744727;
+}
+
+/* Logo dentro del sidebar */
+.logo-container-sidebar {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.logo-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #c49a6c;
+  object-fit: cover;
+  transition: 0.2s ease;
+}
+
+.logo-img:hover {
+  transform: scale(1.05);
+}
+
+/* Menú */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Botones */
+.menu-item {
+  background: #fffdf9;
+  color: #5a3825;
+  border: 1px solid #e5d3b3;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s ease;
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-item:hover {
+  background: #f0e2d0;
+  transform: translateX(4px);
+}
+
+.icono {
+  font-size: 18px;
+}
+
+/* Botón salir */
+.menu-item.salir {
+  background: #8b5e34;
+  color: white;
+}
+
+.menu-item.salir:hover {
+  background: #aa2222;
+}
+
+/* Separador */
+.sidebar hr {
+  border: none;
+  border-top: 1px solid #e5d3b3;
+  margin: 10px 0;
+}

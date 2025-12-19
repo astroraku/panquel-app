@@ -1,0 +1,23 @@
+.tituloUO {
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+.estadoUO {
+  font-size: 18px;
+  color: var(--cafe-medio);
+}
+
+.errorUO {
+  color: red;
+  font-size: 18px;
+  margin-top: 10px;
+}
+
+.orden-contenedorUO {
+  background: var(--tarjeta);
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid var(--borde);
+  margin-top: 15px;
+}

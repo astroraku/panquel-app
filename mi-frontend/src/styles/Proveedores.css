@@ -1,0 +1,16 @@
+.titulo {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.form-proveedor {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.acciones {
+  display: flex;
+  gap: 8px;
+}

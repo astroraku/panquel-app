@@ -1,0 +1,42 @@
+.orden-layout {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebarNO {
+  width: 260px;
+  padding: 20px;
+  border-right: 3px solid var(--cafe-claro);
+}
+
+.titulo-menuNO {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.item-menuNO {
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  background: var(--tarjeta);
+  border: 1px solid var(--cafe-claro);
+}
+
+.item-menuNO.activo {
+  background: var(--cafe-medio);
+  color: white;
+}
+
+/* Toast */
+.avisoNO {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: var(--tarjeta);
+  padding: 18px 24px;
+  border-radius: 10px;
+  border: 2px solid var(--cafe-claro);
+  font-weight: bold;
+}
