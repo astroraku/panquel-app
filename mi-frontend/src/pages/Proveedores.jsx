@@ -123,6 +123,7 @@ export default function Proveedores() {
         </div>
 
         {/* TABLA */}
+        <div className="tabla-contenedorNO">
         <table className="tabla-proveedores">
           <thead>
             <tr>
@@ -157,7 +158,8 @@ export default function Proveedores() {
             ))}
           </tbody>
         </table>
-
+      </div>
+      
         {/* MODAL EDITAR */}
         {proveedorEditando && (
           <div className="modal-overlay" onClick={() => setProveedorEditando(null)}>

@@ -1,8 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Window } from "@tauri-apps/api/window";
+import { LogicalSize } from "@tauri-apps/api/dpi";
+
 import panquelLogo from "../img/panquel.gif";
 import "../styles/Sidebar.css";
-
 
 export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
   const navigate = useNavigate();
@@ -29,7 +31,6 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
     setErrorOrdenes(null);
 
     try {
-      // 🔧 ENDPOINT DJANGO (ajústalo luego)
       const res = await fetch("http://localhost:8000/api/ordenes-activas/");
       if (!res.ok) throw new Error("Error al cargar órdenes");
 
@@ -43,64 +44,78 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
     }
   };
 
-  const cerrarSesion = () => {
-    navigate("/login");
-  };
+const cerrarSesion = async () => {
+  try {
+    const win = Window.getCurrent();
+
+    await win.setSize(new LogicalSize(420, 340));
+    await win.center();
+  } catch (err) {
+    console.warn("No se pudo cambiar tamaño (no Tauri)", err);
+  }
+
+  navigate("/login");
+};
+
+
+
 
   return (
     <>
       <div className={`sidebar ${sidebarAbierto ? "abierto" : "cerrado"}`}>
-
         {/* Botón expandir */}
         <button className="toggle-btn" onClick={toggleSidebar}>
           {sidebarAbierto ? "◀" : "▶"}
         </button>
 
         {/* Logo */}
-        {ruta !== "/app" && (
-          <div className="logo-container-sidebar">
-            <img
-              src={panquelLogo}
-              alt="Logo"
-              className="logo-img"
-              onClick={() => navigate("/app")}
-            />
-          </div>
-        )}
+        <div className="logo-container-sidebar">
+          <img
+            src={panquelLogo}
+            alt="Logo"
+            className="logo-img"
+            onClick={() => navigate("/app")}
+          />
+        </div>
+
 
         <div className="menu">
+          <button
+            onClick={() => navigate("/ultima-orden")}
+            className={`menu-item ${ruta === "/ultima-orden" ? "activo" : ""}`}
+          >
+            🕒 {sidebarAbierto && "Última Orden"}
+          </button>
 
-          {ruta !== "/ultima-orden" && (
-            <button onClick={() => navigate("/ultima-orden")} className="menu-item">
-              🕒 {sidebarAbierto && "Última Orden"}
-            </button>
-          )}
+          <button
+            onClick={() => navigate("/nueva-orden")}
+            className={`menu-item ${ruta === "/nueva-orden" ? "activo" : ""}`}
+          >
+            🧾 {sidebarAbierto && "Generar Orden"}
+          </button>
 
-          {ruta !== "/nueva-orden" && (
-            <button onClick={() => navigate("/nueva-orden")} className="menu-item">
-              🧾 {sidebarAbierto && "Generar Orden"}
-            </button>
-          )}
-
-          {ruta !== "/productos" && (
-            <button onClick={() => navigate("/productos")} className="menu-item">
-              📦 {sidebarAbierto && "Productos"}
-            </button>
-          )}
+          <button
+            onClick={() => navigate("/productos")}
+            className={`menu-item ${ruta === "/productos" ? "activo" : ""}`}
+          >
+            📦 {sidebarAbierto && "Productos"}
+          </button>
 
           <hr />
 
-          {ruta !== "/historial" && (
-            <button onClick={() => navigate("/historial")} className="menu-item">
-              📚 {sidebarAbierto && "Historial"}
-            </button>
-          )}
+          <button
+            onClick={() => navigate("/historial")}
+            className={`menu-item ${ruta === "/historial" ? "activo" : ""}`}
+          >
+            📚 {sidebarAbierto && "Historial"}
+          </button>
 
-          {ruta !== "/proveedores" && (
-            <button onClick={() => navigate("/proveedores")} className="menu-item">
-              🏪 {sidebarAbierto && "Proveedores"}
-            </button>
-          )}
+          <button
+            onClick={() => navigate("/proveedores")}
+            className={`menu-item ${ruta === "/proveedores" ? "activo" : ""}`}
+          >
+            🏪 {sidebarAbierto && "Proveedores"}
+          </button>
 
           {/* ================= ÓRDENES ACTIVAS ================= */}
           {ruta === "/nueva-orden" && sidebarAbierto && (
@@ -111,14 +126,14 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
                 {cargandoOrdenes && <p>Cargando...</p>}
                 {errorOrdenes && <p>{errorOrdenes}</p>}
 
-                {!cargandoOrdenes && !errorOrdenes && ordenesActivas.length === 0 && (
-                  <p>No hay órdenes activas</p>
-                )}
+                {!cargandoOrdenes &&
+                  !errorOrdenes &&
+                  ordenesActivas.length === 0 && (
+                    <p>No hay órdenes activas</p>
+                  )}
 
                 {ordenesActivas.map((orden) => (
-                  <p key={orden.id}>
-                    {orden.proveedor}
-                  </p>
+                  <p key={orden.id}>{orden.proveedor}</p>
                 ))}
               </div>
             </div>
@@ -138,7 +153,10 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
 
       {/* ================= MODAL ================= */}
       {mostrarConfirmacion && (
-        <div className="modal-overlayNO" onClick={() => setMostrarConfirmacion(false)}>
+        <div
+          className="modal-overlayNO"
+          onClick={() => setMostrarConfirmacion(false)}
+        >
           <div className="modalNO" onClick={(e) => e.stopPropagation()}>
             <h3>¿Cerrar sesión?</h3>
             <p>¿Estás seguro de que deseas salir?</p>

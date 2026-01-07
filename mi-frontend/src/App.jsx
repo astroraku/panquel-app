@@ -1,11 +1,33 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "./pages/Sidebar";  // ⬅️ NUEVO
+import Sidebar from "./pages/Sidebar";
 import "./styles/App.css";
 import panquelLogo from "./img/panquel.gif";
+import { useState, useEffect } from "react";
+
 
 export default function App() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+  const disableContextMenu = (e) => e.preventDefault();
+  const blockKeys = (e) => {
+    if (
+      e.key === "F12" ||
+      (e.ctrlKey && e.shiftKey && ["I", "C", "J"].includes(e.key))
+    ) {
+      e.preventDefault();
+    }
+  };
+
+  window.addEventListener("contextmenu", disableContextMenu);
+  window.addEventListener("keydown", blockKeys);
+
+  return () => {
+    window.removeEventListener("contextmenu", disableContextMenu);
+    window.removeEventListener("keydown", blockKeys);
+  };
+}, []);
+
 
   // --- PRODUCTOS INICIALES ---
   const productosIniciales = [

@@ -1,217 +1,27 @@
-/* Contenedor principal */
-.pedidos-contenedor {
-  padding: 30px;
-  font-family: Arial, sans-serif;
+/* ===============================
+   🔒 BLOQUEO DE SCROLL GLOBAL
+================================ */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   background-color: #f8f1e7;
-  min-height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #5a3825; /* Café oscuro */
+  font-family: Arial, sans-serif;
 }
 
-.titulo {
-  margin-bottom: 20px;
-  color: #5a3825;
-}
-
-/* Botón principal */
-.boton-agregar {
-  padding: 10px 20px;
-  cursor: pointer;
-  background: #8b5e34; /* Café medio */
-  color: white;
-  border: none;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  margin-bottom: 30px;
-}
-
-.productos-lista {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  width: 90%;
-  max-width: 1100px;
-}
-
-.producto-fila {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 15px;
-  width: 100%;
-}
-
-.tarjeta {
-  background-color: #fff8f0; /* Crema clara */
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  padding: 20px;
-  color: #5a3825;
-}
-
-.acciones {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.acciones select {
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #c49a6c;
-  margin-top: 5px;
-  width: 100%;
-  background: #fffdf9;
-}
-
-.botones-acciones {
-  margin-top: 15px;
-}
-
-.boton-pedir,
-.boton-modificar {
-  width: 100%;
-  padding: 8px 12px;
-  cursor: pointer;
-  color: white;
-  border: none;
-  border-radius: 5px;
-}
-
-.boton-pedir {
-  background: #8b5e34;
-  color: white;
-  margin-bottom: 10px;
-}
-
-.boton-modificar {
-  background: #c49a6c;
-  color: white;
-}
-
-/* --- MODAL --- */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-.modal-contenido {
-  background: #fff8f0;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  padding: 30px;
-  width: 90%;
-  max-width: 450px;
-  color: #5a3825;
-}
-
-.modal-contenido h2 {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.modal-contenido form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.modal-contenido label {
-  font-weight: bold;
-}
-
-.modal-contenido input,
-.modal-contenido select {
-  border: 1px solid #c49a6c;
-  background: #fffdf9;
-}
-
-.modal-botones {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.boton-guardar {
-  background: #8b5e34;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  width: 48%;
-}
-
-.boton-cancelar {
-  background: #c49a6c;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  width: 48%;
-}
-
-.botones-superiores {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 30px;
-}
-
-.boton-nueva-orden {
-  padding: 10px 20px;
-  cursor: pointer;
-  background: #673ab7;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.en-camino {
-  color: #ff9800;
-  font-weight: bold;
-}
-
-.boton-llegado {
-  margin-top: 10px;
-  background: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-
-.boton-nueva-orden {
-  padding: 10px 20px;
-  cursor: pointer;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-/* --- LAYOUT PRINCIPAL --- */
+/* ===============================
+   LAYOUT PRINCIPAL
+================================ */
 .layout {
   display: flex;
   height: 100vh;
+  width: 100vw;
 }
 
-/* --- SIDEBAR --- */
-
+/* ===============================
+   SIDEBAR
+================================ */
 .sidebar {
   width: 60px;
   height: 100vh;
@@ -222,12 +32,7 @@
   flex-direction: column;
   gap: 10px;
   transition: width 0.3s ease;
-  overflow: hidden;
 }
-
-
-
-
 
 .sidebar.abierto {
   width: 220px;
@@ -261,39 +66,191 @@
   font-weight: 500;
 }
 
-
 .menu-item:hover {
   background: #f0e2d0;
   transform: translateX(4px);
 }
 
-
 .menu-item.salir {
   background: #8b5e34;
+  color: white;
 }
 
 .menu-item.salir:hover {
   background: #aa2222;
 }
 
-/* --- CONTENIDO PRINCIPAL --- */
+/* ===============================
+   CONTENIDO PRINCIPAL
+================================ */
 .contenido {
   flex: 1;
   padding: 25px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
-/* Quita scrollbar pero permite scroll automático */
-body {
-  overflow-y: auto;
-  background-color: #f8f1e7; /* Crema */
+/* ===============================
+   CONTENEDOR PEDIDOS / PRODUCTOS
+================================ */
+.pedidos-contenedor {
+  width: 100%;
+  max-width: 100%;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #5a3825;
 }
 
-/* Ocultar la barra de scroll en WebKit (Chrome / Edge / Opera) */
-body::-webkit-scrollbar {
-  width: 0;
+/* ===============================
+   TITULO
+================================ */
+.titulo {
+  margin-bottom: 20px;
+  color: #5a3825;
 }
 
+/* ===============================
+   BOTONES SUPERIORES
+================================ */
+.botones-superiores {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.boton-agregar,
+.boton-nueva-orden {
+  padding: 10px 20px;
+  cursor: pointer;
+  background: #8b5e34;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* 👇 separación REAL del botón respecto a tarjetas */
+.boton-agregar {
+  margin-bottom: 30px;
+}
+
+/* ===============================
+   LISTA DE PRODUCTOS
+================================ */
+.productos-lista {
+  width: 90%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* ===============================
+   FILA DE PRODUCTO
+================================ */
+.producto-fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  width: 100%;
+}
+
+/* ===============================
+   TARJETAS
+================================ */
+.tarjeta {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  padding: 20px;
+  color: #5a3825;
+}
+
+/* ===============================
+   ACCIONES
+================================ */
+.acciones {
+  display: flex;
+  flex-direction: column;
+}
+
+.acciones select {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #c49a6c;
+  margin-top: 5px;
+  width: 100%;
+  background: #fffdf9;
+}
+
+.botones-acciones {
+  margin-top: 15px;
+}
+
+.boton-pedir,
+.boton-modificar {
+  width: 100%;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+.boton-pedir {
+  background: #8b5e34;
+  margin-bottom: 10px;
+}
+
+.boton-modificar {
+  background: #c49a6c;
+}
+
+/* ===============================
+   ESTADOS
+================================ */
+.en-camino {
+  color: #ff9800;
+  font-weight: bold;
+}
+
+.boton-llegado {
+  margin-top: 10px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* ===============================
+   MODAL
+================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-contenido {
+  background: #fff8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  padding: 30px;
+  width: 90%;
+  max-width: 450px;
+  color: #5a3825;
+}
+
+/* ===============================
+   DASHBOARD
+================================ */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -307,10 +264,6 @@ body::-webkit-scrollbar {
   border-radius: 15px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   text-align: center;
-}
-
-.dashboard-box h2 {
-  margin-bottom: 10px;
 }
 
 .dashboard-box .numero {

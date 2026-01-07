@@ -29,3 +29,5 @@ conectar luego
 ## Nueva Orden
 - NuevaOrden.jsx
 - POST /api/ordenes/
+
+Sidebar: botón activo y logo siempre visible

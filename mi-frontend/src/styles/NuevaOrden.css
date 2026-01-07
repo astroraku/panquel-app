@@ -40,3 +40,16 @@
   border: 2px solid var(--cafe-claro);
   font-weight: bold;
 }
+
+/* Barra superior (input + botones) */
+.barra-superiorNO {
+  display: flex;
+  align-items: center;
+  gap: 16px;       /* ← separación entre botones */
+  margin-bottom: 20px;
+}
+
+/* Botones dentro de la barra */
+.barra-superiorNO .btn-normalNO {
+  white-space: nowrap;
+}

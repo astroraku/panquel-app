@@ -59,7 +59,7 @@
 .menu {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
 /* Botones */
@@ -88,6 +88,20 @@
   font-size: 18px;
 }
 
+/* 🔥 BOTÓN ACTIVO */
+.menu-item.activo {
+  background: #f0c38e;           /* Más destacado */
+  color: #3b2415;
+  font-weight: 700;
+  border-left: 5px solid #8b5e34;
+  transform: translateX(6px);
+}
+
+/* Evitar hover exagerado en activo */
+.menu-item.activo:hover {
+  background: #eab676;
+}
+
 /* Botón salir */
 .menu-item.salir {
   background: #8b5e34;
@@ -103,4 +117,12 @@
   border: none;
   border-top: 1px solid #e5d3b3;
   margin: 10px 0;
+}
+
+h3,
+.modal-buttonsNO {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
 }

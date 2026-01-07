@@ -120,6 +120,7 @@ export default function Historial() {
         </div>
 
         {/* --- TABLA --- */}
+        <div className="tabla-contenedorNO">
         <table className="tabla-pedidos">
           <thead>
             <tr>
@@ -138,6 +139,7 @@ export default function Historial() {
             ))}
           </tbody>
         </table>
+        </div>
 
         {/* --- MODAL DETALLE --- */}
         {pedidoSeleccionado && (
