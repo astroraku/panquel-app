@@ -27,6 +27,19 @@ button {
   padding: 20px;
 }
 
-.boton-agregar {
+.boton-agregar,
+.boton-guardar {
   gap: 20px;
+}
+
+.modal input,
+.modal select,
+.modalNO input,
+.modalNO select,
+input{
+  max-width: 60%;
+}
+
+.modal botones{
+  margin: 10px;
 }

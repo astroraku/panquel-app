@@ -52,4 +52,5 @@
 /* Botones dentro de la barra */
 .barra-superiorNO .btn-normalNO {
   white-space: nowrap;
+  width: 160px;
 }

@@ -179,13 +179,14 @@ export default function Historial() {
                   ))}
                 </tbody>
               </table>
-
+              <div className="modal-botones"> 
               <button
-                className="cerrar"
+                className="btn-normalNO"
                 onClick={() => setPedidoSeleccionado(null)}
               >
                 Cerrar
               </button>
+              </div>
             </div>
           </div>
         )}

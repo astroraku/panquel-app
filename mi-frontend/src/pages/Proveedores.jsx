@@ -163,10 +163,12 @@ export default function Proveedores() {
         {/* MODAL EDITAR */}
         {proveedorEditando && (
           <div className="modal-overlay" onClick={() => setProveedorEditando(null)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
+              
               <h2>Editar proveedor</h2>
-
+              <p className="modalp"><strong>Nombre:</strong></p>
               <input
+                className="modalp"
                 type="text"
                 value={proveedorEditando.nombre}
                 onChange={(e) =>
@@ -176,7 +178,7 @@ export default function Proveedores() {
                   })
                 }
               />
-
+              <p className="modalp"><strong>Teléfono:</strong></p>
               <input
                 type="text"
                 value={proveedorEditando.telefono}
@@ -187,7 +189,7 @@ export default function Proveedores() {
                   })
                 }
               />
-
+              <p className="modalp"><strong>Cantidad de productos:</strong></p>
               <input
                 type="number"
                 value={proveedorEditando.productos}
@@ -199,7 +201,7 @@ export default function Proveedores() {
                 }
               />
 
-              <div className="modal-buttons">
+              <div className="modal-buttonsNO">
                 <button className="btn-guardar" onClick={guardarEdicion}>
                   💾 Guardar cambios
                 </button>

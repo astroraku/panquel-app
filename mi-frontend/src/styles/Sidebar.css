@@ -120,7 +120,7 @@
 }
 
 h3,
-.modal-buttonsNO {
+.modal-buttonsNO, .pNO {
   display: flex;
   justify-content: center;
   gap: 10px;

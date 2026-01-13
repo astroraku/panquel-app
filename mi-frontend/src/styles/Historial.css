@@ -165,6 +165,7 @@ td input:focus {
   padding: 25px;
   width: 420px;
   border: 2px solid var(--cafe-claro);
+  align-items: center;
 }
 
 .modal h2 {
@@ -172,8 +173,8 @@ td input:focus {
 }
 
 .modal button {
-  margin-top: 15px;
-  width: 100%;
+  margin: 10px;
+  width: 160px;
 }
 
 /* ===============================

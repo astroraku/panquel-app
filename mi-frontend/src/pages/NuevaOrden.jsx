@@ -214,16 +214,16 @@ export default function NuevaOrden() {
 
       {/* ---- MODAL ---- */}
       {mostrarModal && (
-        <div className="modal-overlayNO">
-          <div className="modalNO">
+        <div className="modal-overlay">
+          <div className="modal">
             <h3>¿Finalizar la orden?</h3>
-            <p>Se generará un PDF con esta orden.</p>
+            <p className="pNO">Se generará un PDF con esta orden.</p>
 
             <div className="modal-buttonsNO">
-              <button className="btn-cancelarNO" onClick={cancelarFinalizar}>
+              <button className="btn-normalNO" onClick={cancelarFinalizar}>
                 Cancelar
               </button>
-              <button className="btn-confirmarNO" onClick={confirmarFinalizar}>
+              <button className="btn-normalNO" onClick={confirmarFinalizar}>
                 Finalizar
               </button>
             </div>

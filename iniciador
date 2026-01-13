@@ -31,3 +31,10 @@ conectar luego
 - POST /api/ordenes/
 
 Sidebar: botón activo y logo siempre visible
+Eliminar el scroll
+bloquear el click derecho
+cambio colores 
+margen tabla
+logo siempre visible
+boton siempre visible, activo
+cambio tamaño ventana al cerrar sesion

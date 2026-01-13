@@ -30,7 +30,7 @@ button {
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 8px 14px;
+  padding: 8px 16px; /* 🔹 tamaño controlado */
   cursor: pointer;
   transition: 0.2s ease;
 }
@@ -40,13 +40,17 @@ button:hover {
 }
 
 /* ---------- INPUTS ---------- */
-input, select {
+input,
+select{
   background: var(--tarjeta);
   border: 1px solid var(--cafe-claro);
   border-radius: 6px;
   padding: 8px;
   color: var(--cafe-oscuro);
+  width: 200px;
 }
+
+
 
 input:focus {
   outline: none;
@@ -62,28 +66,8 @@ input:focus {
   border: 2px solid var(--borde);
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-thead {
-  background: var(--header-tabla);
-}
-
-th {
-  padding: 10px;
-  border: 1px solid var(--borde);
-}
-
-td {
-  padding: 8px;
-  border: 1px solid var(--header-tabla);
-}
-
 /* ---------- MODALES ---------- */
-.modal-overlay,
-.modal-overlayNO {
+.modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -93,11 +77,53 @@ td {
   z-index: 999;
 }
 
-.modal,
-.modalNO {
+/* CONTENEDOR REAL DEL MODAL */
+.modal-contenido {
   background: var(--tarjeta);
-  padding: 25px;
+  padding: 28px;
   border-radius: 14px;
   border: 2px solid var(--cafe-claro);
-  box-shadow: 0 4px 20px rgba(0,0,0,.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 520px;
+
+  /* 🔹 ESPACIADO INTERNO REAL */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---------- FORMULARIOS EN MODAL ---------- */
+.modal-contenido form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+/* ---------- INPUTS MÁS CORTOS ---------- */
+.modal-contenido input,
+.modal-contenido select {
+  max-width: 60%;
+}
+
+/* ---------- BOTONES DEL MODAL ---------- */
+.modal-botones {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.modal-botones button {
+  min-width: 130px;
+  padding: 8px 16px;
+}
+
+/* ---------- MODAL PEQUEÑO (PEDIR MÁS) ---------- */
+.modal-contenido.pequeno {
+  max-width: 420px;
+}
+
+.modalp{
+  margin: 1px;
 }
