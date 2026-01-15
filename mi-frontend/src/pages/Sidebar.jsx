@@ -159,7 +159,7 @@ const cerrarSesion = async () => {
         >
           <div className="modalNO" onClick={(e) => e.stopPropagation()}>
             <h3>¿Cerrar sesión?</h3>
-            <p>¿Estás seguro de que deseas salir?</p>
+            <p className="pNO">¿Estás seguro de que deseas salir?</p>
 
             <div className="modal-buttonsNO">
               <button

@@ -19,7 +19,6 @@
   flex-direction: column;
   gap: 2px;
   color: #5a3825;
-
   opacity: 0;
   transform: translateY(-15px);
   transition: all 0.5s ease;
@@ -28,6 +27,7 @@
 .login-card.mostrar {
   opacity: 1;
   transform: translateY(0px);
+  align-items: center;
 }
 
 /* Logo arriba */
@@ -46,7 +46,7 @@
   border: 2px solid #c49a6c;
 }
 
-/* Card con menos espacio arriba */
+
 .login-card {
   width: 320px;
   padding: 5px 25px 25px; /* antes 25px en todos lados */
@@ -84,6 +84,7 @@
   font-size: 16px;
   color: #5a3825;
   outline: none;
+  
 }
 
 .login-card input:focus {
@@ -101,6 +102,7 @@
   font-size: 17px;
   font-weight: bold;
   transition: 0.25s ease;
+  width: 40%;
 }
 
 .login-card button:hover {

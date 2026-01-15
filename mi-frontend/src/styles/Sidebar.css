@@ -126,3 +126,70 @@ h3,
   gap: 10px;
   margin-top: 20px;
 }
+
+/* ===== MODAL OVERLAY ===== */
+.modal-overlayNO {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); /* Fondo oscuro */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* 🔥 Por encima de TODO */
+}
+
+/* ===== MODAL ===== */
+.modalNO {
+  background: #fffdf9;
+  padding: 25px;
+  border-radius: 14px;
+  width: 320px;
+  max-width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: aparecer 0.25s ease;
+  align-items: center;
+}
+
+/* Botones */
+.modal-buttonsNO {
+  display: flex;
+  margin-top: 20px;
+}
+
+/* Botón cancelar */
+.btn-cancelarNO {
+  background: #8b5e34;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Botón confirmar */
+.btn-confirmarNO {
+  background: #8b5e34;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn-confirmarNO:hover {
+  background: #aa2222;
+}
+
+/* Animación */
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
