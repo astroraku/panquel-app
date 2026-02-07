@@ -4,7 +4,7 @@ npm run tauri dev
 python manage.py runserver
 
 
-| Elemento                         | Color                   |
+| Elemento                         | Color                   | 
 | -------------------------------- | ----------------------- |
 | Fondo general                    | `#f8f1e7` (crema)       |
 | Tarjetas / cajas                 | `#fff8f0` (crema clara) |

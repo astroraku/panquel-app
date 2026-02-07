@@ -87,6 +87,8 @@ html, body {
   flex: 1;
   padding: 25px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ===============================
@@ -170,10 +172,6 @@ html, body {
 /* ===============================
    ACCIONES
 ================================ */
-.acciones {
-  display: flex;
-  flex-direction: column;
-}
 
 .acciones select {
   padding: 6px;

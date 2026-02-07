@@ -59,23 +59,6 @@ export default function Producto() {
   const [sidebarAbierto, setSidebarAbierto] = useState(true);
   const toggleSidebar = () => setSidebarAbierto(!sidebarAbierto);
 
-  // ================== FUTURO: CARGAR PRODUCTOS DESDE DJANGO ==================
-  /*
-  useEffect(() => {
-    async function cargarProductos() {
-      try {
-        const response = await fetch(`${API_URL}/productos/`);
-        const data = await response.json();
-        setProductos(data);
-      } catch (error) {
-        console.error("Error cargando productos:", error);
-      }
-    }
-
-    cargarProductos();
-  }, []);
-  */
-
   // ================== MODALES ==================
   const abrirModalNuevo = () => {
     setFormData({
@@ -112,24 +95,6 @@ export default function Producto() {
   const guardarProducto = (e) => {
     e.preventDefault();
 
-    // 🔹 FUTURO DJANGO
-    /*
-    if (modoEdicion) {
-      await fetch(`${API_URL}/productos/${productoSeleccionado.id}/`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-    } else {
-      await fetch(`${API_URL}/productos/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-    }
-    */
-
-    // 🔹 MOCK ACTUAL
     if (modoEdicion) {
       setProductos((prev) =>
         prev.map((p) =>
@@ -153,13 +118,6 @@ export default function Producto() {
 
   // ================== CONFIRMAR LLEGADA ==================
   const confirmarLlegada = (producto) => {
-    // 🔹 FUTURO DJANGO
-    /*
-    fetch(`${API_URL}/productos/${producto.id}/confirmar-llegada/`, {
-      method: "POST",
-    });
-    */
-
     setProductos((prev) =>
       prev.map((p) =>
         p.id === producto.id
@@ -180,14 +138,13 @@ export default function Producto() {
       <div className="contenido">
         <h1 className="titulo">Pantalla de Productos</h1>
 
-        <button className="boton-agregar" onClick={abrirModalNuevo}>
+        <button className="btn-agregar " onClick={abrirModalNuevo}>
           ➕ Agregar Producto
         </button>
 
         <div className="productos-lista">
           {productos.map((producto) => (
             <div key={producto.id} className="producto-fila">
-              {/* TARJETA 1 */}
               <div className="tarjeta info-basica">
                 <h2>{producto.nombre}</h2>
                 <p><strong>Descripción:</strong> {producto.descripcion}</p>
@@ -210,14 +167,12 @@ export default function Producto() {
                 )}
               </div>
 
-              {/* TARJETA 2 */}
               <div className="tarjeta info-adicional">
                 <p><strong>Fecha agregado:</strong> {producto.fechaAgregado}</p>
                 <p><strong>Vida útil:</strong> {producto.vidaUtil}</p>
                 <p><strong>Proveedor:</strong> {producto.proveedor}</p>
               </div>
 
-              {/* TARJETA 3 */}
               <div className="tarjeta acciones">
                 <p>
                   <strong>Tipo de stock:</strong>{" "}
@@ -226,11 +181,6 @@ export default function Producto() {
                     : producto.tipoStock === "peso"
                     ? "Por peso"
                     : "Por litros"}
-                </p>
-
-                <p>
-                  <strong>Sugerencia pedido:</strong>{" "}
-                  {producto.sugerenciaPedido}
                 </p>
 
                 <div className="botones-acciones">
@@ -335,15 +285,6 @@ export default function Producto() {
                   <option value="litros">Por litros</option>
                 </select>
 
-                <label>Vida útil:</label>
-                <input
-                  type="text"
-                  value={formData.vidaUtil}
-                  onChange={(e) =>
-                    setFormData({ ...formData, vidaUtil: e.target.value })
-                  }
-                />
-
                 <label>Proveedor:</label>
                 <input
                   type="text"
@@ -353,28 +294,20 @@ export default function Producto() {
                   }
                 />
 
-                <label>Sugerencia de pedido:</label>
-                <input
-                  type="number"
-                  value={formData.sugerenciaPedido}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      sugerenciaPedido: Number(e.target.value),
-                    })
-                  }
-                />
-
                 <label>Stock:</label>
                 <input
                   type="number"
+                  min="0"
                   value={formData.stock}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const valor = Number(e.target.value);
+                    const stockSeguro = isNaN(valor) ? 0 : Math.max(0, valor);
+
                     setFormData({
                       ...formData,
-                      stock: Number(e.target.value),
-                    })
-                  }
+                      stock: stockSeguro,
+                    });
+                  }}
                 />
 
                 <div className="modal-botones">

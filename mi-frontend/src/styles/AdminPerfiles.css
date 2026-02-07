@@ -1,0 +1,55 @@
+.admin-container {
+  background: #f8f1e7;
+  min-height: 100vh;
+  padding: 25px;
+}
+
+.admin-title {
+  color: #5a3825;
+  margin-bottom: 20px;
+}
+
+.admin-card {
+  background: #fff8f0;
+  padding: 15px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.admin-btn {
+  background: #8b5e34;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-btn:hover {
+  background: #5a3825;
+}
+
+.bton-acciones {
+  color: white;
+  border: none;
+  padding: 6px 14px; 
+  min-width: 130px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #8b5e34;
+}
+
+
+.acciones-contenido {
+  display: flex;
+  flex-direction: column; 
+  align-items: center;
+  gap: 8px;
+}

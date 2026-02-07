@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 import json
 
 @csrf_exempt
@@ -28,16 +30,31 @@ def login_view(request):
 
         user = authenticate(username=usuario, password=password)
 
-        if user is not None:
+        if user is None:
             return JsonResponse({
-                "success": True,
-                "mensaje": "Login correcto"
-            })
+                "success": False,
+                "mensaje": "Credenciales incorrectas"
+            }, status=401)
 
-        return JsonResponse({
-            "success": False,
-            "mensaje": "Credenciales incorrectas"
-        }, status=401)
+        # 🔐 TOKEN (si no existe, se crea)
+        token, _ = Token.objects.get_or_create(user=user)
+
+        # 👑 ROL NORMALIZADO
+        rol = "admin" if user.is_superuser else "usuario"
+
+        response = JsonResponse({
+            "success": True,
+            "mensaje": "Login correcto",
+            "token": token.key,
+            "rol": rol,
+            "is_superuser": user.is_superuser,
+            "username": user.username
+        })
+
+        # 🌍 CORS
+        response["Access-Control-Allow-Origin"] = "*"
+
+        return response
 
     return JsonResponse(
         {"error": "Método no permitido"},

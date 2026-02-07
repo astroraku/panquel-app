@@ -23,10 +23,7 @@ body {
   min-height: 100vh;
 }
 
-.contenido {
-  flex: 1;
-  padding: 30px;
-}
+
 
 /* ===============================
    TÍTULO
@@ -116,6 +113,7 @@ td {
   text-align: center;
   color: var(--cafe-oscuro);
   border-bottom: 1px solid #e5cdb2;
+  width: 100px;
 }
 
 tr:last-child td {

@@ -9,7 +9,35 @@ export default function UltimaOrden() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
-  // 🔌 CUANDO ME DES LA URL REAL, SOLO CAMBIAS "http://localhost:8000/api/ultima-orden/"
+  // 🧪 DATOS DE EJEMPLO (MOCK)
+  const ultimaOrdenMock = {
+    id: 128,
+    proveedor: "Distribuidora La Central",
+    fecha: "2026-01-30",
+    items: [
+      {
+        id: 1,
+        nombre: "Harina de trigo 1kg",
+        proveedor: "Distribuidora La Central",
+        cantidad: 10,
+      },
+      {
+        id: 2,
+        nombre: "Azúcar refinada 1kg",
+        proveedor: "Distribuidora La Central",
+        cantidad: 8,
+      },
+      {
+        id: 3,
+        nombre: "Levadura seca 500g",
+        proveedor: "Distribuidora La Central",
+        cantidad: 5,
+      },
+    ],
+  };
+
+  // 🔌 CONEXIÓN REAL A BACKEND (SE DEJA LISTA, PERO COMENTADA)
+  /*
   async function fetchUltimaOrden() {
     try {
       const res = await fetch("http://localhost:8000/api/ultima-orden/");
@@ -23,9 +51,17 @@ export default function UltimaOrden() {
       setCargando(false);
     }
   }
+  */
 
   useEffect(() => {
-    fetchUltimaOrden();
+    // 🔹 MODO MOCK (para pruebas visuales)
+    setTimeout(() => {
+      setUltimaOrden(ultimaOrdenMock);
+      setCargando(false);
+    }, 600);
+
+    // 🔹 CUANDO ACTIVES EL BACKEND, DESCOMENTA ESTO
+    // fetchUltimaOrden();
   }, []);
 
   return (
@@ -38,8 +74,11 @@ export default function UltimaOrden() {
       />
 
       {/* ---- PANEL PRINCIPAL ---- */}
-      <main className={`contenido ${sidebarAbierto ? "con-sidebar" : "sin-sidebar"}`}>
-
+      <main
+        className={`contenido ${
+          sidebarAbierto ? "con-sidebar" : "sin-sidebar"
+        }`}
+      >
         <h2 className="tituloUO">Última Orden Generada</h2>
 
         {cargando && <p className="estadoUO">Cargando última orden...</p>}
@@ -48,11 +87,16 @@ export default function UltimaOrden() {
 
         {ultimaOrden && (
           <div className="orden-contenedorUO">
-
             <div className="info-generalUO">
-              <p><strong>ID de Orden:</strong> {ultimaOrden.id}</p>
-              <p><strong>Proveedor:</strong> {ultimaOrden.proveedor}</p>
-              <p><strong>Fecha:</strong> {ultimaOrden.fecha}</p>
+              <p>
+                <strong>ID de Orden:</strong> {ultimaOrden.id}
+              </p>
+              <p>
+                <strong>Proveedor:</strong> {ultimaOrden.proveedor}
+              </p>
+              <p>
+                <strong>Fecha:</strong> {ultimaOrden.fecha}
+              </p>
             </div>
 
             {/* ---- TABLA ---- */}
@@ -75,7 +119,6 @@ export default function UltimaOrden() {
                 ))}
               </tbody>
             </table>
-
           </div>
         )}
       </main>

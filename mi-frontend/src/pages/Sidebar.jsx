@@ -10,6 +10,7 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
   const ruta = location.pathname.toLowerCase();
+  const rol = localStorage.getItem("rol"); // 👑 ROL
 
   // 🔴 Modal cerrar sesión
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -44,21 +45,21 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
     }
   };
 
-const cerrarSesion = async () => {
-  try {
-    const win = Window.getCurrent();
+  const cerrarSesion = async () => {
+    try {
+      const win = Window.getCurrent();
+      await win.setSize(new LogicalSize(470, 390));
+      await win.center();
+    } catch (err) {
+      console.warn("No se pudo cambiar tamaño (no Tauri)", err);
+    }
 
-    await win.setSize(new LogicalSize(420, 340));
-    await win.center();
-  } catch (err) {
-    console.warn("No se pudo cambiar tamaño (no Tauri)", err);
-  }
+    // 🔐 Limpiar sesión
+    localStorage.removeItem("token");
+    localStorage.removeItem("rol");
 
-  navigate("/login");
-};
-
-
-
+    navigate("/login");
+  };
 
   return (
     <>
@@ -77,7 +78,6 @@ const cerrarSesion = async () => {
             onClick={() => navigate("/app")}
           />
         </div>
-
 
         <div className="menu">
           <button
@@ -116,6 +116,21 @@ const cerrarSesion = async () => {
           >
             🏪 {sidebarAbierto && "Proveedores"}
           </button>
+
+          {/* ======== ADMIN (SOLO ADMIN) ======== */}
+          {rol === "admin" && (
+            <>
+              <hr />
+              <button
+                onClick={() => navigate("/admin/perfiles")}
+                className={`menu-item ${
+                  ruta === "/admin/perfiles" ? "activo" : ""
+                }`}
+              >
+                🛠 {sidebarAbierto && "Administrar"}
+              </button>
+            </>
+          )}
 
           {/* ================= ÓRDENES ACTIVAS ================= */}
           {ruta === "/nueva-orden" && sidebarAbierto && (

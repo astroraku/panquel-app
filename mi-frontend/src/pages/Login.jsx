@@ -14,7 +14,6 @@ export default function Login() {
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
   const [animar, setAnimar] = useState(false);
 
   useEffect(() => {
@@ -50,13 +49,30 @@ export default function Login() {
       });
 
       const data = await response.json();
-      
+
       console.log("STATUS:", response.status);
       console.log("DATA:", data);
 
       if (response.ok && data.success) {
-        const win = Window.getCurrent();
 
+        /* ===============================
+           👑 NORMALIZAR ROL
+           superusuario => admin
+        ================================ */
+        let rolFinal = data.rol;
+
+        if (data.is_superuser === true) {
+          rolFinal = "admin";
+        }
+
+        // 🔐 GUARDAR SESIÓN
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("rol", rolFinal);
+
+        console.log("TOKEN GUARDADO:", data.token);
+        console.log("ROL FINAL:", rolFinal);
+
+        const win = Window.getCurrent();
         await win.setSize(new LogicalSize(1200, 800));
         await win.center();
 

@@ -12,6 +12,7 @@ import "./styles/productos.css";
 import "./styles/historial.css";
 import "./styles/ultimaorden.css";
 import "./styles/proveedores.css";
+import "./styles/AdminPerfiles.css"; // ⬅️ NUEVO
 
 /* --------- PÁGINAS --------- */
 import App from "./App";
@@ -21,32 +22,109 @@ import Productos from "./pages/Productos";
 import Historial from "./pages/Historial";
 import UltimaOrden from "./pages/UltimaOrden";
 import Proveedores from "./pages/Proveedores";
+import AdminPerfiles from "./pages/AdminPerfiles"; // ⬅️ NUEVO
 
 /* --------- ROUTER --------- */
 import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
+/* ===============================
+   🔐 SOLO USUARIOS LOGUEADOS
+================================ */
+function PrivateRoute({ children }) {
+  const token = localStorage.getItem("token");
+  return token ? children : <Navigate to="/login" replace />;
+}
+
+/* ===============================
+   🔐 SOLO ADMIN
+================================ */
+function AdminRoute({ children }) {
+  const rol = localStorage.getItem("rol");
+  return rol === "admin" ? children : <Navigate to="/app" replace />;
+}
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Router>
     <Routes>
-      {/* Login */}
-      <Route path="/" element={<Navigate to="/login" />} />
+
+      {/* REDIRECCIONES BASE */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
+      {/* LOGIN */}
       <Route path="/login" element={<Login />} />
 
-      {/* App base */}
-      <Route path="/app" element={<App />} />
+      {/* APP BASE (LAYOUT / SIDEBAR) */}
+      <Route
+        path="/app"
+        element={
+          <PrivateRoute>
+            <App />
+          </PrivateRoute>
+        }
+      />
 
-      {/* Órdenes */}
-      <Route path="/nueva-orden" element={<NuevaOrden />} />
-      <Route path="/ultima-orden" element={<UltimaOrden />} />
+      {/* ÓRDENES */}
+      <Route
+        path="/nueva-orden"
+        element={
+          <PrivateRoute>
+            <NuevaOrden />
+          </PrivateRoute>
+        }
+      />
 
-      {/* Productos */}
-      <Route path="/productos" element={<Productos />} />
+      <Route
+        path="/ultima-orden"
+        element={
+          <PrivateRoute>
+            <UltimaOrden />
+          </PrivateRoute>
+        }
+      />
 
-      {/* Historial */}
-      <Route path="/historial" element={<Historial />} />
+      {/* PRODUCTOS */}
+      <Route
+        path="/productos"
+        element={
+          <PrivateRoute>
+            <Productos />
+          </PrivateRoute>
+        }
+      />
 
-      {/* Proveedores */}
-      <Route path="/proveedores" element={<Proveedores />} />
+      {/* HISTORIAL */}
+      <Route
+        path="/historial"
+        element={
+          <PrivateRoute>
+            <Historial />
+          </PrivateRoute>
+        }
+      />
+
+      {/* PROVEEDORES */}
+      <Route
+        path="/proveedores"
+        element={
+          <PrivateRoute>
+            <Proveedores />
+          </PrivateRoute>
+        }
+      />
+
+      {/* 🔒 ADMIN */}
+      <Route
+        path="/admin/perfiles"
+        element={
+          <AdminRoute>
+            <AdminPerfiles />
+          </AdminRoute>
+        }
+      />
+
+      {/* FALLBACK */}
+      <Route path="*" element={<Navigate to="/app" replace />} />
+
     </Routes>
   </Router>
 );

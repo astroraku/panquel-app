@@ -19,32 +19,62 @@ export default function NuevaOrden() {
 
   const [proveedor, setProveedor] = useState("");
 
-  // 🔹 PRODUCTOS (MOCK POR AHORA)
+  // 🔎 BUSCADOR
+  const [busqueda, setBusqueda] = useState("");
+
+  // 🔹 PRODUCTOS (MOCK)
   const [productos, setProductos] = useState([
     { id: 1, nombre: "Manzana", proveedor: "Frutas SA", cantidad: 0 },
     { id: 2, nombre: "Pan Bimbo", proveedor: "Panificados MX", cantidad: 0 },
     { id: 3, nombre: "Refresco Cola", proveedor: "Bebidas del Norte", cantidad: 0 },
+    { id: 4, nombre: "Leche", proveedor: "Lala", cantidad: 0 },
+    { id: 5, nombre: "Galletas", proveedor: "Gamesa", cantidad: 0 },
+    { id: 6, nombre: "Aceite", proveedor: "Nutrioli", cantidad: 0 },
+    { id: 7, nombre: "Azúcar", proveedor: "Zulka", cantidad: 0 },
+    { id: 8, nombre: "Sal", proveedor: "La Fina", cantidad: 0 },
+    { id: 9, nombre: "Arroz", proveedor: "Verde Valle", cantidad: 0 },
+    { id: 10, nombre: "Frijol", proveedor: "Isadora", cantidad: 0 },
+    { id: 11, nombre: "Café", proveedor: "Nescafé", cantidad: 0 },
   ]);
 
-  /* ======================================================
-     🔗 FUTURO: CARGAR PRODUCTOS DESDE DJANGO
-     ====================================================== */
-  /*
+  // 🔹 PRODUCTOS FILTRADOS
+  const [productosFiltrados, setProductosFiltrados] = useState([]);
+
+  /* ---------------- PAGINACIÓN ---------------- */
+  const productosPorPagina = 10;
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  /* ---------------- SINCRONIZAR FILTRADOS ---------------- */
   useEffect(() => {
-    async function cargarProductos() {
-      try {
-        const res = await fetch(`${API_URL}/productos/`);
-        const data = await res.json();
-        setProductos(
-          data.map(p => ({ ...p, cantidad: 0 }))
-        );
-      } catch (err) {
-        console.error("Error cargando productos", err);
-      }
-    }
-    cargarProductos();
-  }, []);
-  */
+    setProductosFiltrados(productos);
+  }, [productos]);
+
+  /* ---------------- FILTRO BUSCADOR ---------------- */
+  useEffect(() => {
+    const texto = busqueda.toLowerCase();
+
+    const filtrados = productos.filter(
+      (p) =>
+        p.nombre.toLowerCase().includes(texto) ||
+        p.proveedor.toLowerCase().includes(texto)
+    );
+
+    setProductosFiltrados(filtrados);
+    setPaginaActual(1); // 🔁 volver a página 1 al buscar
+  }, [busqueda, productos]);
+
+  /* ---------------- CÁLCULOS PAGINACIÓN ---------------- */
+  const indiceUltimo = paginaActual * productosPorPagina;
+  const indicePrimero = indiceUltimo - productosPorPagina;
+
+  const productosPagina = productosFiltrados.slice(
+    indicePrimero,
+    indiceUltimo
+  );
+
+  const totalPaginas = Math.ceil(
+    productosFiltrados.length / productosPorPagina
+  );
 
   /* ---------------- FUNCIONES UI ---------------- */
 
@@ -95,34 +125,11 @@ export default function NuevaOrden() {
     doc.save("orden_compra.pdf");
   }
 
-  /* ======================================================
-     🔗 FUTURO: ENVIAR ORDEN A DJANGO
-     ====================================================== */
-
   function confirmarFinalizar() {
-    // 1️⃣ PDF
     generarPDF();
-
-    // 2️⃣ BACKEND (LISTO PARA ACTIVAR)
-    /*
-    fetch(`${API_URL}/ordenes/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        proveedor,
-        productos: productos.filter(p => p.cantidad > 0),
-        fecha: new Date().toISOString(),
-      }),
-    });
-    */
-
-    // 3️⃣ UI
     setOrdenIniciada(false);
     setMostrarModal(false);
     setMostrarAviso(true);
-
     setTimeout(() => setMostrarAviso(false), 2500);
   }
 
@@ -130,23 +137,19 @@ export default function NuevaOrden() {
 
   return (
     <div className="layout">
-
-      {/* ---- SIDEBAR ---- */}
       <Sidebar
         sidebarAbierto={sidebarAbierto}
         toggleSidebar={() => setSidebarAbierto(!sidebarAbierto)}
       />
 
-      {/* ---- PANEL ---- */}
       <main className={`contenido ${sidebarAbierto ? "con-sidebar" : "sin-sidebar"}`}>
-
         <div className="barra-superiorNO">
           <input
             type="text"
-            placeholder="Proveedor"
+            placeholder="Buscar producto o proveedor"
             className="input-proveedorNO"
-            value={proveedor}
-            onChange={(e) => setProveedor(e.target.value)}
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
           />
 
           {!ordenIniciada && (
@@ -160,11 +163,9 @@ export default function NuevaOrden() {
               <button className="btn-normalNO" onClick={guardarOrden}>
                 Guardar
               </button>
-
               <button className="btn-normalNO" onClick={resetearOrdenIA}>
                 Resetear Orden IA
               </button>
-
               <button className="btn-normalNO" onClick={handleFinalizar}>
                 Finalizar
               </button>
@@ -183,7 +184,7 @@ export default function NuevaOrden() {
               </tr>
             </thead>
             <tbody>
-              {productos.map((p) => (
+              {productosPagina.map((p) => (
                 <tr key={p.id}>
                   <td>{p.nombre}</td>
                   <td>{p.proveedor}</td>
@@ -193,15 +194,18 @@ export default function NuevaOrden() {
                       min="0"
                       className="input-tablaNO"
                       value={p.cantidad}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const valor = Number(e.target.value);
+                        const cantidadSegura = isNaN(valor) ? 0 : Math.max(0, valor);
+
                         setProductos(
                           productos.map((prod) =>
                             prod.id === p.id
-                              ? { ...prod, cantidad: Number(e.target.value) }
+                              ? { ...prod, cantidad: cantidadSegura }
                               : prod
                           )
-                        )
-                      }
+                        );
+                      }}
                     />
                   </td>
                 </tr>
@@ -210,6 +214,28 @@ export default function NuevaOrden() {
           </table>
         </div>
 
+        {/* 🔹 PAGINACIÓN */}
+        {totalPaginas > 1 && (
+          <div className="paginacion">
+            <button
+              disabled={paginaActual === 1}
+              onClick={() => setPaginaActual(paginaActual - 1)}
+            >
+              ◀ Anterior
+            </button>
+
+            <span>
+              Página {paginaActual} de {totalPaginas}
+            </span>
+
+            <button
+              disabled={paginaActual === totalPaginas}
+              onClick={() => setPaginaActual(paginaActual + 1)}
+            >
+              Siguiente ▶
+            </button>
+          </div>
+        )}
       </main>
 
       {/* ---- MODAL ---- */}
@@ -231,13 +257,11 @@ export default function NuevaOrden() {
         </div>
       )}
 
-      {/* ---- AVISO ---- */}
       {mostrarAviso && (
         <div className="avisoNO">
           <p>✔ Orden Finalizada y PDF generado</p>
         </div>
       )}
-
     </div>
   );
 }
