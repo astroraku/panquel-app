@@ -1,138 +1,148 @@
-import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import "../styles/Historial.css";
 import { useNavigate } from "react-router-dom";
-
-// ✔ TAURI 2 (se deja listo, aunque no se use aún)
+import { useState, useEffect, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-
-// 🔹 URL FUTURA DEL BACKEND DJANGO
+import { generarPDFDesdeDatos } from "../utils/pdf";
 const API_URL = "http://127.0.0.1:8000/api";
 
+function parseFecha(fechaStr) {
+  const meses = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+  };
+
+  if (!fechaStr) return new Date(); // seguridad
+
+  const partes = fechaStr.split("-");
+  if (partes.length !== 3) return new Date(); // evita crash
+
+  const [dia, mes, anio] = partes;
+  return new Date(`20${anio}`, meses[mes], dia);
+}
+
 export default function Historial() {
+
   const navigate = useNavigate();
 
-  // ================== PEDIDOS MOCK (TEMPORAL) ==================
-  const pedidosMock = [
-    {
-      id: 1,
-      proveedor: "Bimbo México",
-      codigo: "PED-001",
-      fecha: "2025-10-20",
-      productos: [
-        { nombre: "Pan Blanco", cantidad: 10 },
-        { nombre: "Pan Integral", cantidad: 5 },
-      ],
-    },
-    {
-      id: 2,
-      proveedor: "Frutas del Valle",
-      codigo: "PED-002",
-      fecha: "2025-10-22",
-      productos: [
-        { nombre: "Manzana", cantidad: 20 },
-        { nombre: "Plátano", cantidad: 15 },
-      ],
-    },
-    {
-      id: 3,
-      proveedor: "Lala",
-      codigo: "PED-003",
-      fecha: "2025-10-25",
-      productos: [{ nombre: "Leche", cantidad: 30 }],
-    },
-    {
-      id: 4,
-      proveedor: "Gamesa",
-      codigo: "PED-004",
-      fecha: "2025-10-28",
-      productos: [{ nombre: "Galletas", cantidad: 40 }],
-    },
-    {
-      id: 5,
-      proveedor: "Pepsi",
-      codigo: "PED-005",
-      fecha: "2025-10-29",
-      productos: [{ nombre: "Refresco", cantidad: 25 }],
-    },
-    {
-      id: 6,
-      proveedor: "Coca Cola",
-      codigo: "PED-006",
-      fecha: "2025-10-30",
-      productos: [{ nombre: "Refresco", cantidad: 50 }],
-    },
-    {
-      id: 7,
-      proveedor: "Sabritas",
-      codigo: "PED-007",
-      fecha: "2025-11-01",
-      productos: [{ nombre: "Papas", cantidad: 60 }],
-    },
-    {
-      id: 8,
-      proveedor: "Zulka",
-      codigo: "PED-008",
-      fecha: "2025-11-02",
-      productos: [{ nombre: "Azúcar", cantidad: 20 }],
-    },
-    {
-      id: 9,
-      proveedor: "Verde Valle",
-      codigo: "PED-009",
-      fecha: "2025-11-03",
-      productos: [{ nombre: "Arroz", cantidad: 35 }],
-    },
-    {
-      id: 10,
-      proveedor: "Isadora",
-      codigo: "PED-010",
-      fecha: "2025-11-04",
-      productos: [{ nombre: "Frijol", cantidad: 45 }],
-    },
-    {
-      id: 11,
-      proveedor: "Nescafé",
-      codigo: "PED-011",
-      fecha: "2025-11-05",
-      productos: [{ nombre: "Café", cantidad: 15 }],
-    },
-  ];
+  const [catalogo, setCatalogo] = useState([]);
 
-  // ================== STATES ==================
-  const [pedidos, setPedidos] = useState(pedidosMock);
+  const [pedidos, setPedidos] = useState([]);
+  const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
 
+  // 🔥 FILTRO UNIFICADO
   const [filtro, setFiltro] = useState({
-    proveedor: "",
-    codigo: "",
+    busqueda: "",
     fecha: "",
   });
 
-  const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
-
-  // ================== PAGINACIÓN ==================
-  const pedidosPorPagina = 10;
+  const [pedidosPorPagina, setPedidosPorPagina] = useState(10);
   const [paginaActual, setPaginaActual] = useState(1);
+  const tablaRef = useRef(null);
+
+  // ⭐ PAGINACIÓN PRODUCTOS MODAL
+  const [paginaProductos, setPaginaProductos] = useState(1);
+  const productosPorPagina = 5;
+  
+
+
+  // ================== CARGAR HISTORIAL ==================
+  useEffect(() => {
+    fetch(`${API_URL}/historial/`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setPedidos(data);
+        } else if (data.pedidos) {
+          setPedidos(data.pedidos);
+        } else {
+          setPedidos([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Error cargando historial:", err);
+      });
+  }, []);
+
+
+useEffect(() => {
+  async function cargarCatalogo() {
+    try {
+      const res = await fetch(`${API_URL}/producto/`);
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setCatalogo(data);
+      } else {
+        console.warn("Catálogo no válido:", data);
+        setCatalogo([]);
+      }
+
+    } catch (error) {
+      console.error("Error cargando catálogo:", error);
+      setCatalogo([]);
+    }
+  }
+
+  cargarCatalogo();
+}, []);
+
+useEffect(() => {
+  const calcularFilas = () => {
+    if (!tablaRef.current) return;
+
+    const contenedor = tablaRef.current;
+    const rect = contenedor.getBoundingClientRect();
+    
+    // 1. Calculamos el espacio desde el inicio de la tabla hasta el fondo de la pantalla
+    // Restamos unos 80px extra para dejar espacio a los botones de paginación
+    const alturaDisponible = window.innerHeight - rect.top - 80;
+
+    // 2. Definimos alturas fijas (deben coincidir con tu CSS)
+    const alturaHeader = 45; 
+    const alturaFila = 61;
+
+    // 3. Calculamos cuántas filas caben en el espacio restante tras quitar el header
+    const espacioParaFilas = alturaDisponible - alturaHeader;
+    const filas = Math.floor(espacioParaFilas / alturaFila);
+
+    // 4. Aplicamos el resultado (mínimo 3 filas para que no se vea vacío)
+    setPedidosPorPagina(filas > 3 ? filas : 3);
+  };
+
+  // Ejecutar al cargar
+  calcularFilas();
+
+  // Escuchar cambios de tamaño
+  window.addEventListener("resize", calcularFilas);
+  return () => window.removeEventListener("resize", calcularFilas);
+}, [pedidos]); // Se recalcula si llegan nuevos pedidos
 
   // ================== FILTROS ==================
   const pedidosFiltrados = pedidos.filter((p) => {
+
+    const texto = (filtro.busqueda || "").toLowerCase().trim();
+    const fechaPedido = parseFecha(p.fecha);
+
     return (
-      (filtro.proveedor === "" ||
-        p.proveedor
-          .toLowerCase()
-          .includes(filtro.proveedor.toLowerCase())) &&
-      (filtro.codigo === "" ||
-        p.codigo.toLowerCase().includes(filtro.codigo.toLowerCase())) &&
-      (filtro.fecha === "" || p.fecha.includes(filtro.fecha))
+      (
+        texto === "" ||
+        (p.proveedores  || []).join(", ").toLowerCase().includes(texto) ||
+        (p.codigo || "").toLowerCase().includes(texto)
+      ) &&
+      (
+        filtro.fecha === "" ||
+        `${fechaPedido.getFullYear()}-${String(fechaPedido.getMonth() + 1).padStart(2, "0")}` === filtro.fecha
+      )
     );
   });
 
-  // 🔁 Volver a página 1 al cambiar filtros
+  // 👉 resetear página al buscar
   useEffect(() => {
     setPaginaActual(1);
-  }, [filtro]);
+  }, [filtro.busqueda, filtro.fecha]);
 
-  // ================== CÁLCULOS PAGINACIÓN ==================
+  // ================== PAGINACIÓN ==================
   const indiceUltimo = paginaActual * pedidosPorPagina;
   const indicePrimero = indiceUltimo - pedidosPorPagina;
 
@@ -146,12 +156,40 @@ export default function Historial() {
   );
 
   // ================== SIDEBAR ==================
-  const [sidebarAbierto, setSidebarAbierto] = useState(true);
+  const [sidebarAbierto, setSidebarAbierto] = useState(() => {
+    const guardado = localStorage.getItem("sidebarAbierto");
+    return guardado === null ? true : guardado === "true";
+  });
+
   const toggleSidebar = () => setSidebarAbierto(!sidebarAbierto);
 
+  useEffect(() => {
+    localStorage.setItem("sidebarAbierto", sidebarAbierto);
+  }, [sidebarAbierto]);
+
+  // ================== PRODUCTOS MODAL ==================
+  let productosPagina = [];
+  let totalPaginasProductos = 1;
+
+  if (pedidoSeleccionado?.productos) {
+
+    const indiceUltimoProd = paginaProductos * productosPorPagina;
+    const indicePrimeroProd = indiceUltimoProd - productosPorPagina;
+
+    productosPagina = pedidoSeleccionado.productos.slice(
+      indicePrimeroProd,
+      indiceUltimoProd
+    );
+
+    totalPaginasProductos = Math.ceil(
+      pedidoSeleccionado.productos.length / productosPorPagina
+    );
+  }
+console.log(pedidos);
   // ================== RENDER ==================
   return (
     <div className="layout">
+
       <Sidebar
         sidebarAbierto={sidebarAbierto}
         toggleSidebar={toggleSidebar}
@@ -159,63 +197,69 @@ export default function Historial() {
 
       <div className="contenido">
 
-        {/* --- FILTROS --- */}
+        {/* 🔍 FILTROS */}
         <div className="filtros">
-          <input
-            type="text"
-            placeholder="Buscar por proveedor"
-            value={filtro.proveedor}
-            onChange={(e) =>
-              setFiltro({ ...filtro, proveedor: e.target.value })
-            }
-          />
+
           <input
             type="text"
             placeholder="Buscar por código"
-            value={filtro.codigo}
+            value={filtro.busqueda}
             onChange={(e) =>
-              setFiltro({ ...filtro, codigo: e.target.value })
+              setFiltro({ ...filtro, busqueda: e.target.value })
             }
           />
+
           <input
-            type="date"
+            type="month"
             value={filtro.fecha}
             onChange={(e) =>
               setFiltro({ ...filtro, fecha: e.target.value })
             }
           />
+
         </div>
 
-        {/* --- TABLA --- */}
-        <div className="tabla-contenedorNO">
-          <table className="tabla-pedidos">
+        {/* 📊 TABLA */}
+        <div className="tabla-contenedorNO" ref={tablaRef}>
+
+          <table className="tabla-estandar">
             <thead>
               <tr>
-                <th>Proveedor</th>
+                <th>Proveedor(es)</th>
                 <th>Código</th>
                 <th>Fecha</th>
               </tr>
             </thead>
+
             <tbody>
               {pedidosPagina.map((p) => (
-                <tr key={p.id} onClick={() => setPedidoSeleccionado(p)}>
-                  <td>{p.proveedor}</td>
+                <tr
+                  key={`${p.codigo}-${p.fecha}`}
+                  onClick={() => {
+                    setPedidoSeleccionado(p);
+                    setPaginaProductos(1);
+                  }}
+                >
+                  <td>{p.proveedores?.join(", ")}</td>
                   <td>{p.codigo}</td>
                   <td>{p.fecha}</td>
                 </tr>
               ))}
             </tbody>
+
           </table>
+
         </div>
 
-        {/* --- PAGINACIÓN --- */}
+        {/* 🔢 PAGINACIÓN */}
         {totalPaginas > 1 && (
           <div className="paginacion">
+
             <button
               disabled={paginaActual === 1}
               onClick={() => setPaginaActual(paginaActual - 1)}
             >
-              ◀ Anterior
+              ◀
             </button>
 
             <span>
@@ -226,30 +270,28 @@ export default function Historial() {
               disabled={paginaActual === totalPaginas}
               onClick={() => setPaginaActual(paginaActual + 1)}
             >
-              Siguiente ▶
+              ▶
             </button>
+
           </div>
         )}
 
-        {/* --- MODAL DETALLE --- */}
+        {/* 📦 MODAL */}
         {pedidoSeleccionado && (
           <div
             className="modal-overlay"
             onClick={() => setPedidoSeleccionado(null)}
           >
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+
               <h2>Detalle del Pedido</h2>
 
-              <p>
-                <strong>Proveedor:</strong>{" "}
-                {pedidoSeleccionado.proveedor}
-              </p>
-              <p>
-                <strong>Código:</strong> {pedidoSeleccionado.codigo}
-              </p>
-              <p>
-                <strong>Fecha:</strong> {pedidoSeleccionado.fecha}
-              </p>
+              <p><strong>Proveedor(es):</strong>{" "}{pedidoSeleccionado.proveedores?.join(", ")}</p>
+              <p><strong>Código:</strong> {pedidoSeleccionado.codigo}</p>
+              <p><strong>Fecha:</strong> {pedidoSeleccionado.fecha}</p>
 
               <h3>Productos</h3>
 
@@ -260,9 +302,10 @@ export default function Historial() {
                     <th>Cantidad</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {pedidoSeleccionado.productos?.map((prod, i) => (
-                    <tr key={i}>
+                  {productosPagina.map((prod, i) => (
+                    <tr key={`${prod.nombre}-${i}`}>
                       <td>{prod.nombre}</td>
                       <td>{prod.cantidad}</td>
                     </tr>
@@ -270,17 +313,63 @@ export default function Historial() {
                 </tbody>
               </table>
 
-              <div className="modal-botones">
-                <button
-                  className="btn-normalNO"
-                  onClick={() => setPedidoSeleccionado(null)}
-                >
-                  Cerrar
-                </button>
+              {/* PAGINACIÓN PRODUCTOS */}
+              <div className="footer-modal">
+
+                {/* CENTRO REAL */}
+                {totalPaginasProductos > 1 && (
+                  <div className="paginacion-centro">
+                    <button
+                      disabled={paginaProductos === 1}
+                      onClick={() => setPaginaProductos(paginaProductos - 1)}
+                    >
+                      ◀
+                    </button>
+
+                    <span>
+                      {paginaProductos} / {totalPaginasProductos}
+                    </span>
+
+                    <button
+                      disabled={paginaProductos === totalPaginasProductos}
+                      onClick={() => setPaginaProductos(paginaProductos + 1)}
+                    >
+                      ▶
+                    </button>
+                  </div>
+                )}
+
+                {/* DERECHA */}
+                <div className="acciones">
+                  <button
+                    className="btn-icono"
+                    onClick={() => {
+                      generarPDFDesdeDatos({
+                        proveedor: pedidoSeleccionado.proveedores,
+                        fecha: pedidoSeleccionado.fecha,
+                        productos: pedidoSeleccionado.productos
+                      });
+                    }}
+                  >
+                    📥
+                  </button>
+
+                
+                </div>
+
               </div>
+                <div className="cerrarbtn">  
+                <button
+                    className="btn-normalNO"
+                    onClick={() => setPedidoSeleccionado(null)}
+                  >
+                    Cerrar
+                  </button>
+                  </div>
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

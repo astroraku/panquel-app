@@ -10,11 +10,6 @@
   margin-bottom: 25px;
 }
 
-.btn-agregar {
-  margin-bottom: 20px; /* separa el botón de la tabla */
-  width: 200px;
-}
-
 .paginacion {
    margin-top: auto;          /* 👈 empuja la paginación hasta abajo */
   display: flex;

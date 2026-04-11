@@ -23,7 +23,17 @@ body {
   min-height: 100vh;
 }
 
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px; /* espacio entre botones y texto */
+  margin-top: 10px;
+}
 
+.paginacion span {
+  white-space: nowrap; /* evita que el texto se parta */
+}
 
 /* ===============================
    TÍTULO
@@ -40,7 +50,7 @@ body {
 .fila-superior {
   display: flex;
   gap: 15px;
-  margin-bottom: 25px;
+  margin-bottom: 5px;
 }
 
 .filtros input,
@@ -143,7 +153,7 @@ td input:focus {
 }
 
 /* ===============================
-   MODALES
+   MODALES (CORREGIDO)
 ================================ */
 .modal-overlay {
   position: fixed;
@@ -155,42 +165,96 @@ td input:focus {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000; /* Asegura que esté por encima de todo */
 }
 
 .modal {
   background-color: var(--tarjeta);
   border-radius: 16px;
-  padding: 25px;
-  width: 420px;
+  padding: 10px 20px; /* Reducido de 15px 25px */
+  width: 95%;
+  max-width: 400px;
   border: 2px solid var(--cafe-claro);
-  align-items: center;
+  height: 480px; 
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Cambiado a flex-start para controlar mejor el flujo */
 }
 
 .modal h2 {
   color: var(--cafe-oscuro);
+  font-size: 1.2rem; /* Título más pequeño */
+  margin: 5px 0;
+  text-align: center;
 }
 
-.modal button {
-  margin: 10px;
-  width: 160px;
+.modal h3 {
+  font-size: 1rem;
+  margin: 10px 0 5px 0;
+  color: var(--cafe-medio);
+}
+
+.modal p {
+  margin: 2px 0;
+  font-size: 0.9rem;
 }
 
 /* ===============================
-   TABLA INTERNA DE MODAL
+   TABLA INTERNA (SCROLLABLE)
 ================================ */
 .tabla-productos {
   width: 100%;
-  margin-top: 10px;
+  table-layout: fixed; /* Crucial para que el truncado funcione */
   border-collapse: collapse;
 }
 
-.tabla-productos th,
-.tabla-productos td {
-  border-bottom: 1px solid #e5cdb2;
+/* Contenedor opcional si quieres que solo la tabla tenga scroll */
+/* Si no tienes un div rodeando la tabla, el overflow del .modal hará el trabajo */
+
+.tabla-productos th {
   padding: 8px;
-  text-align: left;
+  font-size: 0.85rem;
+  background-color: #f4eade;
 }
 
+.tabla-productos td {
+  padding: 0 8px;
+  height: 38px; /* Bajamos de 45px a 38px */
+  font-size: 0.85rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #e5cdb2;
+  white-space: nowrap; 
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===============================
+   PAGINACIÓN Y BOTONES MODAL
+================================ */
+.modal .paginacion {
+  margin: 10px 0;
+  gap: 8px;
+}
+
+.modal .paginacion button {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.modal-botones {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: auto; /* Empuja el botón al fondo del modal */
+  padding-top: 10px;
+}
+
+.modal-botones button {
+  margin: 0;
+  width: 100%; /* Botón de cerrar a lo ancho para fácil acceso */
+  max-width: 200px;
+  padding: 8px;
+}
 /* ===============================
    BOTÓN CERRAR
 ================================ */
@@ -202,4 +266,65 @@ td input:focus {
 .cerrar:hover {
   background-color: var(--cafe-medio);
   color: white;
+}
+.footer-modal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+/* Para balancear y mantener centro real */
+.footer-modal {
+  position: relative; /* CLAVE */
+  display: flex;
+  justify-content: flex-end; /* todo a la derecha */
+  align-items: center;
+  margin-top: 15px;
+}
+
+/* CENTRO PERFECTO */
+.paginacion-centro {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* DERECHA */
+.acciones {
+  gap: 10px;
+}
+
+/* Botón icono más elegante */
+.btn-icono {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icono {
+  background-color: transparent;
+  color: var(--cafe-medio);
+  border: 1px solid var(--cafe-claro);
+}
+
+.btn-icono:hover {
+  background-color: var(--cafe-medio);
+  color: white;
+}
+
+div.cerrarbtn {
+align-items: center;
+justify-content: center; 
+display: flex;
+margin-top: 20px;
 }

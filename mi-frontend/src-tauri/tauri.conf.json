@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "mi-frontend",
-  "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "productName": "Panquel",
+  "version": "1.0.0",
+  "identifier": "com.panquel.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -14,15 +14,16 @@
       {
         "label": "main",
         "title": "Panquel",
-        "width": 470,        
-        "height": 390,      
+        "width": 490,
+        "height": 440,
         "resizable": false,
         "fullscreen": false,
+        "maximizable": false,
         "center": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000;"
     }
   },
   "bundle": {
@@ -34,6 +35,7 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "externalBin": ["bin/backend"]
   }
 }

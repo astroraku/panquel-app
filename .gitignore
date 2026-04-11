@@ -12,3 +12,24 @@ dist/
 # ===== IDE =====
 .vscode/
 .idea/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Django build
+backend/build/
+*.spec
+
+# Node
+node_modules/
+dist/
+
+# Tauri
+mi-frontend/src-tauri/target/
+mi-frontend/src-tauri/bin/
+mi-frontend/src-tauri/bin/_internal/
+
+# Otros
+*.log

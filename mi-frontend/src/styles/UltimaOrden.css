@@ -16,8 +16,14 @@
 
 .orden-contenedorUO {
   background: var(--tarjeta);
-  padding: 20px;
+  padding: 15px; /* 🔥 menos padding */
   border-radius: 12px;
   border: 2px solid var(--borde);
-  margin-top: 15px;
+  margin-top: 10px;
+
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;
+  max-height: 100%;
 }

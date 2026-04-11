@@ -2,15 +2,15 @@
 .sidebar {
   width: 60px;
   height: 100vh;
-  background: #fff8f0; /* Crema */
-  padding: 20px 10px;
-  border-right: 1px solid #c49a6c; /* Café claro */
+  background: #fff8f0;
+  padding: 20px 10px 20px 10px;
+  border-right: 1px solid #c49a6c;
+
   display: flex;
   flex-direction: column;
-  gap: 15px;
+
   transition: width 0.3s ease;
   overflow: hidden;
-  position: relative;
 }
 
 .sidebar.abierto {
@@ -42,13 +42,19 @@
 }
 
 .logo-img {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  width: 180px;
+  height: 180px;
+  border-radius: 10%;
   cursor: pointer;
   border: 2px solid #c49a6c;
-  object-fit: cover;
+  object-fit: fill;
   transition: 0.2s ease;
+
+}
+
+.sidebar.cerrado .logo-img {
+  width: 45px;
+  height: 45px;
 }
 
 .logo-img:hover {
@@ -60,7 +66,23 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  flex: 1;
+  min-height: 0;
+
+  overflow-y: auto;
+
+  scrollbar-width: none;
 }
+
+.menu::-webkit-scrollbar {
+  display: none;
+}
+
+.menu::-webkit-scrollbar {
+  display: none;
+}
+
 
 /* Botones */
 .menu-item {
@@ -87,6 +109,9 @@
 .icono {
   font-size: 18px;
 }
+.menu {
+  padding-right: 6px;  /* 👈 espacio para que no se recorten */
+}
 
 /* 🔥 BOTÓN ACTIVO */
 .menu-item.activo {
@@ -102,10 +127,18 @@
   background: #eab676;
 }
 
+/* 👉 Cuando el sidebar está cerrado */
+.sidebar.cerrado .menu-item {
+  justify-content: center;  /* centra horizontal */
+  padding: 12px 0;          /* opcional: más compacto */
+}
+
 /* Botón salir */
 .menu-item.salir {
   background: #8b5e34;
   color: white;
+  margin-top: 10px;
+  padding-bottom: 10px;
 }
 
 .menu-item.salir:hover {
@@ -192,4 +225,44 @@ h3,
     opacity: 1;
     transform: scale(1);
   }
+}
+
+.info-orden-sidebar {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.05); /* Un fondo sutil */
+  border-radius: 8px;
+  margin: 10px 15px;
+  text-align: center;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #d4a373; /* O el color café de tu tema */
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.dot-parpadeo {
+  height: 8px;
+  width: 8px;
+  background-color: #ffb703;
+  border-radius: 50%;
+  display: inline-block;
+  animation: parpadeo 1.5s infinite;
+}
+
+.fecha-sidebar {
+  font-size: 0.75rem;
+  color: #888;
+  margin: 0;
+}
+
+@keyframes parpadeo {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
 }

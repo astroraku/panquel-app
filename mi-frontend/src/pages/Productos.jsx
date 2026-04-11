@@ -1,74 +1,121 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import "../styles/Productos.css";
 
-// 🔹 URL DEL BACKEND DJANGO (FUTURO)
 const API_URL = "http://127.0.0.1:8000/api";
 
 export default function Producto() {
   const navigate = useNavigate();
 
-  // ================== PRODUCTOS MOCK (TEMPORAL) ==================
-  const productosIniciales = [
-    {
-      id: 1,
-      nombre: "Manzana",
-      stock: 20,
-      descripcion: "Fruta fresca roja",
-      tipoStock: "unidad",
-      fechaAgregado: "2025-10-10",
-      vidaUtil: "7 días",
-      proveedor: "Frutas del Valle",
-      sugerenciaPedido: 15,
-      pedidoPendiente: 0,
-    },
-    {
-      id: 2,
-      nombre: "Pan Bimbo",
-      stock: 12,
-      descripcion: "Pan blanco para sándwich",
-      tipoStock: "unidad",
-      fechaAgregado: "2025-10-15",
-      vidaUtil: "10 días",
-      proveedor: "Bimbo México",
-      sugerenciaPedido: 8,
-      pedidoPendiente: 0,
-    },
-  ];
+  const productosIniciales = [];
 
-  // ================== STATES ==================
   const [productos, setProductos] = useState(productosIniciales);
   const [mostrarModal, setMostrarModal] = useState(false);
-  const [mostrarPedir, setMostrarPedir] = useState(false);
+  const [mostrarEliminar, setMostrarEliminar] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
-  const [cantidadPedir, setCantidadPedir] = useState(0);
+  const [proveedores, setProveedores] = useState([]);
+
+  // ================= CARGAR PRODUCTOS (CORREGIDO) =================
+  async function cargarProductos() {
+    try {
+      const response = await fetch(`${API_URL}/producto/`);
+      const data = await response.json();
+
+      setProductos(data);
+    } catch (error) {
+      console.error("Error cargando productos:", error);
+    }
+  }
+
+async function cargarProveedores() {
+  try {
+    const response = await fetch(`${API_URL}/proveedores/`);
+    const data = await response.json();
+    setProveedores(data);
+  } catch (error) {
+    console.error("Error cargando proveedores:", error);
+  }
+}
+
+  useEffect(() => {
+    cargarProductos();
+    cargarProveedores(); // 👈 FALTABA ESTO
+  }, []);
+
+  // 🔎 BUSCADOR
+  const [busqueda, setBusqueda] = useState("");
+
+  // 🔢 PAGINACIÓN
+  const [productosPorPagina, setProductosPorPagina] = useState(5);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const tablaRef = useRef(null);
 
   const [formData, setFormData] = useState({
     nombre: "",
-    descripcion: "",
     tipoStock: "unidad",
-    vidaUtil: "",
-    proveedor: "",
-    sugerenciaPedido: "",
-    stock: 0,
+    proveedor_id: ""
   });
 
-  // ================== SIDEBAR ==================
-  const [sidebarAbierto, setSidebarAbierto] = useState(true);
+  // ================= SIDEBAR =================
+  const [sidebarAbierto, setSidebarAbierto] = useState(() => {
+    const guardado = localStorage.getItem("sidebarAbierto");
+    return guardado === null ? true : guardado === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sidebarAbierto", sidebarAbierto);
+  }, [sidebarAbierto]);
+
   const toggleSidebar = () => setSidebarAbierto(!sidebarAbierto);
 
-  // ================== MODALES ==================
+  // ================== BACKEND ==================
+
+  async function eliminarProductoBackend(id) {
+    try {
+      await fetch(`${API_URL}/producto/${id}/`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Error eliminando producto:", error);
+    }
+  }
+
+  // ================= FILTRADO (BUSCADOR) =================
+  const productosFiltrados = productos.filter((producto) => {
+    const texto = busqueda.toLowerCase();
+
+    return (
+      (producto.nombre || "").toLowerCase().includes(texto) ||
+      (producto.proveedor_nombre || "").toLowerCase().includes(texto)
+    );
+  });
+
+  // Reiniciar página cuando cambia la búsqueda
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda]);
+
+  // ================= PAGINACIÓN =================
+  const indiceUltimo = paginaActual * productosPorPagina;
+  const indicePrimero = indiceUltimo - productosPorPagina;
+
+  const productosPagina = productosFiltrados.slice(
+    indicePrimero,
+    indiceUltimo
+  );
+
+  const totalPaginas = Math.ceil(
+    productosFiltrados.length / productosPorPagina
+  );
+
+  // ================= MODALES =================
   const abrirModalNuevo = () => {
     setFormData({
       nombre: "",
-      descripcion: "",
       tipoStock: "unidad",
-      vidaUtil: "",
-      proveedor: "",
-      sugerenciaPedido: "",
-      stock: 0,
+      proveedor_id: "",
     });
     setProductoSeleccionado(null);
     setModoEdicion(false);
@@ -76,58 +123,119 @@ export default function Producto() {
   };
 
   const abrirModalEditar = (producto) => {
-    setFormData(producto);
+    setFormData({...producto,proveedor_id: producto.proveedor_id});
     setProductoSeleccionado(producto);
     setModoEdicion(true);
     setMostrarModal(true);
   };
 
-  const abrirModalPedir = (producto) => {
+  const abrirModalEliminar = (producto) => {
     setProductoSeleccionado(producto);
-    setCantidadPedir(1);
-    setMostrarPedir(true);
+    setMostrarEliminar(true);
   };
 
   const cerrarModal = () => setMostrarModal(false);
-  const cerrarPedir = () => setMostrarPedir(false);
 
-  // ================== GUARDAR PRODUCTO ==================
-  const guardarProducto = (e) => {
-    e.preventDefault();
-
-    if (modoEdicion) {
-      setProductos((prev) =>
-        prev.map((p) =>
-          p.id === productoSeleccionado.id ? { ...formData } : p
-        )
-      );
-    } else {
-      setProductos((prev) => [
-        ...prev,
-        {
-          ...formData,
-          id: Date.now(),
-          fechaAgregado: new Date().toISOString().slice(0, 10),
-          pedidoPendiente: 0,
-        },
-      ]);
-    }
-
-    setMostrarModal(false);
+  const cerrarEliminar = () => {
+    setMostrarEliminar(false);
+    setProductoSeleccionado(null);
   };
 
-  // ================== CONFIRMAR LLEGADA ==================
-  const confirmarLlegada = (producto) => {
-    setProductos((prev) =>
-      prev.map((p) =>
-        p.id === producto.id
-          ? { ...p, stock: p.stock + p.pedidoPendiente, pedidoPendiente: 0 }
-          : p
-      )
+  const guardarProducto = async (e) => {
+    e.preventDefault();
+
+    try {
+      if (modoEdicion) {
+        // ✏️ EDITAR
+        await fetch(`${API_URL}/producto/${productoSeleccionado.id}/`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(formData)
+        });
+
+      } else {
+        // ➕ CREAR
+        await fetch(`${API_URL}/producto/crear/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(formData)
+        });
+      }
+
+      await cargarProductos();
+      setMostrarModal(false);
+
+    } catch (error) {
+      console.error("Error guardando producto:", error);
+    }
+  };
+
+  const confirmarEliminar = async () => {
+    if (!productoSeleccionado) return;
+
+    try {
+      await fetch(`${API_URL}/producto/${productoSeleccionado.id}/`, {
+        method: "DELETE"
+      });
+
+      await cargarProductos();
+      setMostrarEliminar(false);
+
+    } catch (error) {
+      console.error("Error eliminando:", error);
+    }
+  };
+
+useEffect(() => {
+  const calcularFilas = () => {
+    if (!tablaRef.current) return;
+
+    const contenedor = tablaRef.current;
+
+    // 📏 posición real de la tabla
+    const top = contenedor.getBoundingClientRect().top;
+
+    // 📏 espacio disponible real
+    const alturaDisponible = window.innerHeight - top - 20;
+
+    // 🔥 ALTURA HEADER
+    let alturaHeader = 0;
+    const header = contenedor.querySelector("thead");
+    if (header) {
+      alturaHeader = header.offsetHeight;
+    }
+
+    // 🔥 ALTURA FILA
+    let alturaFila = 50;
+    const fila = contenedor.querySelector("tbody tr");
+    if (fila) {
+      alturaFila = fila.offsetHeight;
+    }
+
+    // 🔥 CALCULO REAL
+    const filas = Math.floor(
+      (alturaDisponible - alturaHeader) / alturaFila
+    );
+
+    // 🔥 AJUSTE DINÁMICO (anti scroll fantasma)
+    const hayScroll =
+      contenedor.scrollHeight > contenedor.clientHeight;
+
+    setProductosPorPagina(
+      filas > 3 ? (hayScroll ? filas -1 : filas) : 3
     );
   };
 
-  // ================== RENDER ==================
+  calcularFilas();
+
+  window.addEventListener("resize", calcularFilas);
+  return () => window.removeEventListener("resize", calcularFilas);
+}, [productos]);
+
   return (
     <div className="layout">
       <Sidebar
@@ -136,196 +244,186 @@ export default function Producto() {
       />
 
       <div className="contenido">
-        <h1 className="titulo">Pantalla de Productos</h1>
 
-        <button className="btn-agregar " onClick={abrirModalNuevo}>
-          ➕ Agregar Producto
-        </button>
+        <div className="header-contenido">
 
-        <div className="productos-lista">
-          {productos.map((producto) => (
-            <div key={producto.id} className="producto-fila">
-              <div className="tarjeta info-basica">
-                <h2>{producto.nombre}</h2>
-                <p><strong>Descripción:</strong> {producto.descripcion}</p>
-                <p>
-                  <strong>Stock actual:</strong> {producto.stock}{" "}
-                  {producto.tipoStock === "unidad"
-                    ? "unidades"
-                    : producto.tipoStock === "peso"
-                    ? "kg"
-                    : "litros"}
-                </p>
+          <input
+            type="text"
+            placeholder="Buscar producto o proveedor"
+            id="buscadorr"
+            className="input-buscador"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
 
-                {producto.pedidoPendiente > 0 && (
-                  <button
-                    className="boton-confirmar"
-                    onClick={() => confirmarLlegada(producto)}
-                  >
-                    ✔ Confirmar llegada ({producto.pedidoPendiente})
-                  </button>
-                )}
-              </div>
-
-              <div className="tarjeta info-adicional">
-                <p><strong>Fecha agregado:</strong> {producto.fechaAgregado}</p>
-                <p><strong>Vida útil:</strong> {producto.vidaUtil}</p>
-                <p><strong>Proveedor:</strong> {producto.proveedor}</p>
-              </div>
-
-              <div className="tarjeta acciones">
-                <p>
-                  <strong>Tipo de stock:</strong>{" "}
-                  {producto.tipoStock === "unidad"
-                    ? "Por unidad"
-                    : producto.tipoStock === "peso"
-                    ? "Por peso"
-                    : "Por litros"}
-                </p>
-
-                <div className="botones-acciones">
-                  <button
-                    className="boton-pedir"
-                    onClick={() => abrirModalPedir(producto)}
-                  >
-                    📦 Pedir más
-                  </button>
-
-                  <button
-                    className="boton-modificar"
-                    onClick={() => abrirModalEditar(producto)}
-                  >
-                    ✏️ Modificar
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+          <button className="btn-agregar" onClick={abrirModalNuevo}>
+            ➕ Agregar Producto
+          </button>
         </div>
 
-        {/* ================== MODAL PEDIR ================== */}
-        {mostrarPedir && productoSeleccionado && (
+        <div className="tabla-contenedor" ref={tablaRef}>
+          <table className="tabla-proveedores">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Proveedor</th>
+                <th>Prov. Alias</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {productosPagina.map((producto) => (
+                <tr key={producto.id}>
+                  <td>{producto.nombre}</td>
+                  <td>{producto.cantidad}</td>
+                  <td>{producto.proveedor_nombre}</td>
+                  <td>{producto.proveedor_id}</td>
+
+                  <td className="acciones">
+                    <div className="acciones-contenido">
+                      <button
+                        className="bton-acciones"
+                        onClick={() => abrirModalEditar(producto)}
+                      >
+                        ✏️ Editar
+                      </button>
+
+                      <button
+                        className="bton-acciones eliminar"
+                        onClick={() => abrirModalEliminar(producto)}
+                      >
+                        🗑 Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 🔢 PAGINACIÓN */}
+        {totalPaginas > 1 && (
+          <div className="paginacion">
+            <button
+              disabled={paginaActual === 1}
+              onClick={() => setPaginaActual(paginaActual - 1)}
+            >
+              ◀ Anterior
+            </button>
+
+            <span>
+              Página {paginaActual} de {totalPaginas}
+            </span>
+
+            <button
+              disabled={paginaActual === totalPaginas}
+              onClick={() => setPaginaActual(paginaActual + 1)}
+            >
+              Siguiente ▶
+            </button>
+          </div>
+        )}
+
+        {/* 🔴 MODAL ELIMINAR */}
+        {mostrarEliminar && productoSeleccionado && (
           <div className="modal-overlay">
             <div className="modal-contenido">
-              <h2>Pedir más de {productoSeleccionado.nombre}</h2>
-
-              <label>Cantidad a pedir:</label>
-              <input
-                type="number"
-                min="1"
-                value={cantidadPedir}
-                onChange={(e) =>
-                  setCantidadPedir(Math.max(1, Number(e.target.value)))
-                }
-              />
-
+              <h2>Confirmar eliminación</h2>
+              <p>
+                ¿Estás seguro de eliminar el producto{" "}
+                <strong>{productoSeleccionado.nombre}</strong>?
+              </p>
               <div className="modal-botones">
                 <button
-                  className="boton-guardar"
-                  onClick={() => {
-                    setProductos((prev) =>
-                      prev.map((p) =>
-                        p.id === productoSeleccionado.id
-                          ? { ...p, pedidoPendiente: cantidadPedir }
-                          : p
-                      )
-                    );
-                    cerrarPedir();
-                  }}
+                  className="boton-cancelar"
+                  onClick={cerrarEliminar}
                 >
-                  Registrar pedido
-                </button>
-
-                <button className="boton-cancelar" onClick={cerrarPedir}>
                   Cancelar
+                </button>
+                <button
+                  className="boton-eliminar"
+                  onClick={confirmarEliminar}
+                >
+                  Sí, eliminar
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ================== MODAL NUEVO / EDITAR ================== */}
+        {/* 🔵 MODAL AGREGAR / EDITAR */}
         {mostrarModal && (
           <div className="modal-overlay">
             <div className="modal-contenido">
-              <h2>
-                {modoEdicion ? "Editar producto" : "Agregar nuevo producto"}
-              </h2>
+
+              <h2>{modoEdicion ? "Editar" : "Agregar"} producto</h2>
 
               <form onSubmit={guardarProducto}>
-                <label>Nombre:</label>
+
                 <input
-                  type="text"
+                  placeholder="Nombre"
+                  id="modal"
                   value={formData.nombre}
                   onChange={(e) =>
                     setFormData({ ...formData, nombre: e.target.value })
                   }
-                  required
                 />
 
-                <label>Descripción:</label>
-                <input
-                  type="text"
-                  value={formData.descripcion}
-                  onChange={(e) =>
-                    setFormData({ ...formData, descripcion: e.target.value })
-                  }
-                  required
-                />
 
-                <label>Tipo de stock:</label>
-                <select
-                  value={formData.tipoStock}
-                  onChange={(e) =>
-                    setFormData({ ...formData, tipoStock: e.target.value })
-                  }
-                >
-                  <option value="unidad">Por unidad</option>
-                  <option value="peso">Por peso</option>
-                  <option value="litros">Por litros</option>
-                </select>
-
-                <label>Proveedor:</label>
-                <input
-                  type="text"
-                  value={formData.proveedor}
-                  onChange={(e) =>
-                    setFormData({ ...formData, proveedor: e.target.value })
-                  }
-                />
-
-                <label>Stock:</label>
                 <input
                   type="number"
-                  min="0"
-                  value={formData.stock}
-                  onChange={(e) => {
-                    const valor = Number(e.target.value);
-                    const stockSeguro = isNaN(valor) ? 0 : Math.max(0, valor);
-
+                  placeholder="Cantidad"
+                  value={formData.cantidad}
+                  onChange={(e) =>
                     setFormData({
                       ...formData,
-                      stock: stockSeguro,
-                    });
-                  }}
+                      cantidad: e.target.value
+                    })
+                  }
                 />
 
-                <div className="modal-botones">
-                  <button type="submit" className="boton-guardar">
-                    Guardar
-                  </button>
-                  <button
-                    type="button"
-                    className="boton-cancelar"
-                    onClick={cerrarModal}
-                  >
-                    Cancelar
-                  </button>
-                </div>
+                <select
+                  value={formData.proveedor_id}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      proveedor_id: e.target.value
+                    })
+                  }
+                >
+                  <option value="">Selecciona proveedor</option>
+                  {proveedores.map((prov) => (
+                    <option key={prov.id} value={prov.id}>
+                      {prov.name}
+                    </option>
+                  ))}
+                </select>
+
+                <button type="submit">Guardar</button>
+                <button type="button" onClick={cerrarModal}>
+                  Cancelar
+                </button>
+
               </form>
             </div>
           </div>
         )}
+
+        {/* ELIMINAR (NO SE TOCA) */}
+        {mostrarEliminar && (
+          <div className="modal-overlay">
+            <div className="modal-contenido">
+              <h2>¿Eliminar producto?</h2>
+
+              <button onClick={confirmarEliminar}>Sí</button>
+              <button onClick={() => setMostrarEliminar(false)}>No</button>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -2,6 +2,33 @@
   padding: 15px 20px;
 }
 
+/* ================= FORM ================= */
+.form-producto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.campo-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.campo-form label {
+  font-weight: bold;
+  color: #9c5628;
+  margin-bottom: 6px;
+}
+
+.campo-form input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* ================= DASHBOARD ================= */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -22,24 +49,73 @@
   margin-top: 10px;
 }
 
+/* ================= BOTONES ================= */
 button {
   flex-shrink: 0;
-  padding: 20px;
+  padding: 0px 16px; /* 🔥 consistente con inputs */
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
 }
 
-.boton-agregar,
-.boton-guardar {
-  gap: 20px;
+/* 🔥 BOTÓN AGREGAR ALINEADO */
+.btn-agregar {
+  height: 38px;
+  width: 200px;
+  text-align: center;
 }
 
-.modal input,
-.modal select,
-.modalNO input,
-.modalNO select,
-input{
-  max-width: 60%;
+/* ================= HEADER (BUSCADOR + BOTÓN) ================= */
+.header-contenido {
+  display: flex;
+  align-items: center; /* 🔥 alineación perfecta vertical */
+  gap: 12px;
 }
 
-.modal botones{
-  margin: 10px;
+/* ================= BUSCADOR ================= */
+.input-buscador {
+  height: 38px; /* 🔥 mismo alto que botón */
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+
+  width: 240px; /* 🔥 tamaño controlado */
+  box-sizing: border-box;
+}
+
+/* ================= MODAL ================= */
+
+/* 🔥 FORM DENTRO DEL MODAL */
+.modal-contenido form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 🔥 INPUTS Y SELECTS */
+.modal-contenido input,
+.modal-contenido select {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* 🔥 BOTONES DEL MODAL */
+.modal-contenido button {
+  width: 100%;
+  max-width: 300px;
+  font-weight: bold;
+}
+
+/* 🔥 CONTENEDOR BOTONES MODAL */
+.modal-botones {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
 }

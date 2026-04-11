@@ -1,12 +1,24 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "enables the default permissions",
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
+  "allowlist": {
+    "http": {
+      "all": false,
+      "request": ["http://127.0.0.1:8000/*"]
+    },
+    "shell": {
+      "all": false,
+      "execute": true,
+      "sidecar": true
+    }
+  },
+  "bundle": {
+    "resources": ["./backend"]
+  },
   "permissions": [
     "core:window:allow-set-size",
-    "core:window:allow-center"
+    "core:window:allow-center",
+    "core:window:allow-current-monitor"
   ]
 }

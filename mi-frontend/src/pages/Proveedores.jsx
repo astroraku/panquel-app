@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "../styles/Proveedores.css";
 import Sidebar from "./Sidebar";
 import { useNavigate } from "react-router-dom";
 
 // ✔ IMPORT CORRECTO PARA TAURI 2
 import { getCurrentWindow } from "@tauri-apps/api/window";
+const API_URL = "http://127.0.0.1:8000/api";
 
 export default function Proveedores() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function Proveedores() {
   const [nuevoProveedor, setNuevoProveedor] = useState({
     nombre: "",
     telefono: "",
-    productos: 0,
+    email: "",
   });
 
   // 🔹 Modal agregar proveedor
@@ -23,24 +24,64 @@ export default function Proveedores() {
   // 🔹 Modal editar proveedor
   const [proveedorEditando, setProveedorEditando] = useState(null);
 
-  // 🔹 PAGINACIÓN
-  const proveedoresPorPagina = 5;
+  // 🔹 PAGINACIÓN (DINÁMICA 🔥)
+  const [proveedoresPorPagina, setProveedoresPorPagina] = useState(5);
   const [paginaActual, setPaginaActual] = useState(1);
 
+  // 🔥 REF PARA MEDIR
+  const tablaRef = useRef(null);
+
   useEffect(() => {
-    // Datos temporales
-    setProveedores([
-      { id: 1, nombre: "Coca Cola", telefono: "3312345678", productos: 12 },
-      { id: 2, nombre: "Sabritas", telefono: "3322334455", productos: 7 },
-      { id: 3, nombre: "Bimbo", telefono: "3311223344", productos: 15 },
-      { id: 4, nombre: "Pepsi", telefono: "3399887766", productos: 10 },
-      { id: 5, nombre: "Lala", telefono: "3311112222", productos: 6 },
-      { id: 6, nombre: "Gamesa", telefono: "3377778888", productos: 9 },
-    ]);
+    fetch(`${API_URL}/proveedores/`)
+      .then((res) => res.json())
+      .then((data) => {
+        const proveedoresFormateados = data.map((p) => ({
+          id: p.id,
+          nombre: p.name,
+          telefono: p.telephone,
+          email: p.email,
+        }));
+
+        setProveedores(proveedoresFormateados);
+      })
+      .catch((err) => console.error("Error cargando proveedores:", err));
   }, []);
 
-  // --- SIDEBAR STATE ---
-  const [sidebarAbierto, setSidebarAbierto] = useState(true);
+  // 🔥 CALCULAR FILAS AUTOMÁTICAMENTE
+useEffect(() => {
+  const calcularFilas = () => {
+    if (!tablaRef.current) return;
+
+    const alturaPantalla = window.innerHeight;
+    const espacioExtra = 300;
+
+    let alturaFila = 50;
+
+    const fila = tablaRef.current.querySelector("tbody tr");
+    if (fila) {
+      alturaFila = fila.offsetHeight;
+    }
+
+    const filas = Math.floor((alturaPantalla - espacioExtra) / alturaFila);
+    setProveedoresPorPagina(filas > 3 ? filas +1 : 3);
+  };
+
+  calcularFilas();
+
+  window.addEventListener("resize", calcularFilas);
+  return () => window.removeEventListener("resize", calcularFilas);
+}, [proveedores]); // 🔥 AQUÍ
+
+  // ================== SIDEBAR ==================
+  const [sidebarAbierto, setSidebarAbierto] = useState(() => {
+    const guardado = localStorage.getItem("sidebarAbierto");
+    return guardado === null ? true : guardado === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sidebarAbierto", sidebarAbierto);
+  }, [sidebarAbierto]);
+
   const toggleSidebar = () => setSidebarAbierto(!sidebarAbierto);
 
   // 🔹 CÁLCULOS DE PAGINACIÓN
@@ -57,40 +98,87 @@ export default function Proveedores() {
   );
 
   // Agregar proveedor
-  const agregarProveedor = () => {
+  const agregarProveedor = async () => {
     if (!nuevoProveedor.nombre.trim()) return;
 
-    const nuevo = {
-      id: proveedores.length + 1,
-      ...nuevoProveedor,
-    };
+    try {
+      const res = await fetch(`${API_URL}/proveedores/crear/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(nuevoProveedor),
+      });
 
-    setProveedores([...proveedores, nuevo]);
-    setPaginaActual(1); // 🔹 volver a la primera página
+      const data = await res.json();
 
-    setNuevoProveedor({
-      nombre: "",
-      telefono: "",
-      productos: 0,
-    });
+      const nuevo = {
+        id: data.id,
+        nombre: data.name,
+        telefono: data.telephone,
+        email: data.email,
+      };
 
-    setModalAgregar(false);
+      setProveedores([...proveedores, nuevo]);
+      setPaginaActual(1);
+
+      setNuevoProveedor({
+        nombre: "",
+        telefono: "",
+        email: "",
+      });
+
+      setModalAgregar(false);
+
+    } catch (error) {
+      console.error("Error creando proveedor:", error);
+    }
   };
 
   // Eliminar proveedor
-  const eliminarProveedor = (id) => {
-    setProveedores(proveedores.filter((p) => p.id !== id));
-    setPaginaActual(1);
+  const eliminarProveedor = async (id) => {
+    try {
+      await fetch(`${API_URL}/proveedores/${id}/`, {
+        method: "DELETE",
+      });
+      setProveedores(proveedores.filter((p) => p.id !== id));
+      setPaginaActual(1);
+    } catch (error) {
+      console.error("Error eliminando proveedor:", error);
+    }
   };
 
-  // Guardar cambios del proveedor editado
-  const guardarEdicion = () => {
-    setProveedores(
-      proveedores.map((p) =>
-        p.id === proveedorEditando.id ? proveedorEditando : p
-      )
-    );
-    setProveedorEditando(null);
+  // Guardar cambios
+  const guardarEdicion = async () => {
+    try {
+      await fetch(`${API_URL}/proveedores/${proveedorEditando.id}/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre: proveedorEditando.nombre,
+          telefono: proveedorEditando.telefono,
+          email: proveedorEditando.email,
+        }),
+      });
+
+      const res = await fetch(`${API_URL}/proveedores/`);
+      const data = await res.json();
+
+      const formateados = data.map((p) => ({
+        id: p.id,
+        nombre: p.name,
+        telefono: p.telephone,
+        email: p.email,
+      }));
+
+      setProveedores(formateados);
+      setProveedorEditando(null);
+
+    } catch (error) {
+      console.error("Error editando:", error);
+    }
   };
 
   return (
@@ -98,20 +186,19 @@ export default function Proveedores() {
       <Sidebar sidebarAbierto={sidebarAbierto} toggleSidebar={toggleSidebar} />
 
       <div className="contenido">
-        
 
         <button className="btn-agregar" onClick={() => setModalAgregar(true)}>
           ➕ Agregar proveedor
         </button>
 
         {/* TABLA */}
-        <div className="tabla-contenedorNO">
+        <div className="tabla-contenedorNO" ref={tablaRef}>
           <table className="tabla-proveedores">
             <thead>
               <tr>
                 <th>Proveedor</th>
                 <th>Teléfono</th>
-                <th>Productos</th>
+                <th>Email</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -120,22 +207,22 @@ export default function Proveedores() {
                 <tr key={prov.id}>
                   <td>{prov.nombre}</td>
                   <td>{prov.telefono}</td>
-                  <td>{prov.productos}</td>
+                  <td>{prov.email}</td>
                   <td className="acciones">
                     <div className="acciones-contenido">
-                    <button
-                      className="bton-acciones"
-                      onClick={() => setProveedorEditando({ ...prov })}
-                    >
-                      ✏️ Editar
-                    </button>
+                      <button
+                        className="bton-acciones"
+                        onClick={() => setProveedorEditando({ ...prov })}
+                      >
+                        ✏️ Editar
+                      </button>
 
-                    <button
-                      className="bton-acciones"
-                      onClick={() => eliminarProveedor(prov.id)}
-                    >
-                      ❌ Eliminar
-                    </button>
+                      <button
+                        className="bton-acciones"
+                        onClick={() => eliminarProveedor(prov.id)}
+                      >
+                        ❌ Eliminar
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -144,7 +231,7 @@ export default function Proveedores() {
           </table>
         </div>
 
-        {/* 🔹 CONTROLES DE PAGINACIÓN */}
+        {/* PAGINACIÓN */}
         {totalPaginas > 1 && (
           <div className="paginacion">
             <button
@@ -167,68 +254,32 @@ export default function Proveedores() {
           </div>
         )}
 
-        {/* 🟢 MODAL AGREGAR */}
+        {/* MODALES (sin cambios) */}
         {modalAgregar && (
           <div className="modal-overlay" onClick={() => setModalAgregar(false)}>
-            <div
-              className="modal-contenido"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
               <h2>Agregar proveedor</h2>
 
               <p className="modalp"><strong>Nombre:</strong></p>
-              <input
-                type="text"
-                value={nuevoProveedor.nombre}
-                onChange={(e) =>
-                  setNuevoProveedor({
-                    ...nuevoProveedor,
-                    nombre: e.target.value,
-                  })
-                }
-              />
+              <input type="text" value={nuevoProveedor.nombre}
+                onChange={(e) => setNuevoProveedor({ ...nuevoProveedor, nombre: e.target.value })} />
 
               <p className="modalp"><strong>Teléfono:</strong></p>
-              <input
-                type="text"
-                value={nuevoProveedor.telefono}
-                onChange={(e) =>
-                  setNuevoProveedor({
-                    ...nuevoProveedor,
-                    telefono: e.target.value,
-                  })
-                }
-              />
+              <input type="text" value={nuevoProveedor.telefono}
+                onChange={(e) => setNuevoProveedor({ ...nuevoProveedor, telefono: e.target.value })} />
 
-              <p className="modalp"><strong>Cantidad de productos:</strong></p>
-              <input
-                type="number"
-                value={nuevoProveedor.productos}
-                onChange={(e) =>
-                  setNuevoProveedor({
-                    ...nuevoProveedor,
-                    productos: Number(e.target.value),
-                  })
-                }
-              />
+              <p className="modalp"><strong>Email</strong></p>
+              <input type="text" value={nuevoProveedor.email}
+                onChange={(e) => setNuevoProveedor({ ...nuevoProveedor, email: e.target.value })} />
 
               <div className="modal-buttonsNO">
-                <button className="btn-guardar" onClick={agregarProveedor}>
-                  💾 Agregar
-                </button>
-
-                <button
-                  className="btn-cerrar"
-                  onClick={() => setModalAgregar(false)}
-                >
-                  Cancelar
-                </button>
+                <button className="btn-guardar" onClick={agregarProveedor}>💾 Agregar</button>
+                <button className="btn-cerrar" onClick={() => setModalAgregar(false)}>Cancelar</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* 🔵 MODAL EDITAR */}
         {proveedorEditando && (
           <div
             className="modal-overlay"
@@ -264,19 +315,20 @@ export default function Proveedores() {
                 }
               />
 
-              <p className="modalp"><strong>Cantidad de productos:</strong></p>
+              <p className="modalp"><strong>Email:</strong></p>
               <input
-                type="number"
-                value={proveedorEditando.productos}
+                type="text"
+                value={proveedorEditando.email}
                 onChange={(e) =>
                   setProveedorEditando({
                     ...proveedorEditando,
-                    productos: Number(e.target.value),
+                    email: e.target.value,
                   })
                 }
               />
 
-              <div className="modal-buttonsNO">
+              {/* 🔥 CLASE CORRECTA */}
+              <div className="modal-botones">
                 <button className="btn-guardar" onClick={guardarEdicion}>
                   💾 Guardar cambios
                 </button>
@@ -291,6 +343,7 @@ export default function Proveedores() {
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

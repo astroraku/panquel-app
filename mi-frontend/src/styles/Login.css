@@ -4,34 +4,14 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: #f8f1e7; /* crema */
+  background: #f8f1e7;
 }
 
 /* Animación de entrada */
-
-.login-card.mostrar {
-  opacity: 1;
-  transform: translateY(0px);
-  align-items: center;
-}
-
-
-.login-logo {
-  width: 110px;
-  height: 110px;
-  display: block;          /* elimina espacios arriba/abajo */
-  margin: 0 auto 5px auto; /* centrado con poco espacio abajo */
-  padding: 0;
-  object-fit: cover;       /* llena el círculo */
-  border-radius: 50%;      /* círculo perfecto */
-  border: 2px solid #c49a6c;
-}
-
-
 .login-card {
-  width: 370px;
-  height: 350px;
-  padding: 5px 25px 25px; /* antes 25px en todos lados */
+  width: 400px;
+  height: 405px;
+  padding: 5px 25px 25px;
   background: #fff8f0;
   border-radius: 14px;
   border: 2px solid #c49a6c;
@@ -46,19 +26,43 @@
   padding-bottom: 8px;
 }
 
+.login-card.mostrar {
+  opacity: 1;
+  transform: translateY(0px);
+  align-items: center;
+}
+
+.login-logo {
+  width: 150px;
+  height: 150px;
+  display: block;
+  object-fit: fill;
+  border-radius: 10%;
+  border: 2px solid #c49a6c;
+  margin-top: 10px;
+}
+
+.int {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: auto;
+  padding-bottom: 10px;
+}
 
 /* Título */
 .login-card h2 {
-  display: block;          /* elimina espacios arriba/abajo */
-  margin: 0 auto 5px auto;
+  margin: 5px auto;
   text-align: center;
-  margin-bottom: 5px;
   color: #5a3825;
   font-weight: bold;
 }
 
-/* Inputs */
-.login-card input {
+/* Estilo Base para Inputs (Usuario y Password) */
+.login-input {
+  width: 60%; /* Tamaño unificado */
   padding: 10px;
   border-radius: 8px;
   border: 2px solid #c49a6c;
@@ -66,15 +70,51 @@
   font-size: 16px;
   color: #5a3825;
   outline: none;
-  
+  box-sizing: border-box; /* Evita que el padding ensanche el input */
 }
 
-.login-card input:focus {
+.login-input:focus {
   border-color: #8b5e34;
 }
 
-/* Botón */
-.login-card button {
+/* Contenedor del Password */
+.password-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-password {
+  width: 100% !important; /* Llena el 100% de su grupo (que ya es 85%) */
+  padding-right: 40px !important;
+}
+
+/* Botón de Ver/Ocultar con Icono */
+.btn-toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c49a6c;
+  cursor: pointer;
+  transition: color 0.2s;
+  z-index: 10;
+}
+
+.btn-toggle-password:hover {
+  color: #8b5e34;
+}
+
+/* Botón de Entrar */
+.btn-entrar {
   padding: 10px;
   background: #8b5e34;
   color: #fff8f0;
@@ -84,10 +124,11 @@
   font-size: 17px;
   font-weight: bold;
   transition: 0.25s ease;
-  width: 40%;
+  width: 45%; /* Un poco más grande para el texto "Entrar" */
+  margin-top: 5px;
 }
 
-.login-card button:hover {
+.btn-entrar:hover {
   background: #5a3825;
 }
 
@@ -95,10 +136,19 @@
 .error {
   color: #b33939;
   text-align: center;
-  font-size: 15px;
+  font-size: 14px;
+  height: 20px;
+  margin-bottom: 5px;
+  font-weight: 500;
 }
 
 /* Ocultar scrollbar */
 body::-webkit-scrollbar {
   width: 0;
+}
+
+/* Ocultar ojo nativo de Windows/Edge */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
 }

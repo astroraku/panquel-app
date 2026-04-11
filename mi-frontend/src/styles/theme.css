@@ -30,7 +30,7 @@ button {
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 8px 16px; /* 🔹 tamaño controlado */
+  padding: 8px 16px;
   cursor: pointer;
   transition: 0.2s ease;
 }
@@ -41,16 +41,17 @@ button:hover {
 
 /* ---------- INPUTS ---------- */
 input,
-select{
+select {
   background: var(--tarjeta);
   border: 1px solid var(--cafe-claro);
   border-radius: 6px;
   padding: 8px;
   color: var(--cafe-oscuro);
-  width: 200px;
+
+  /* 🔥 CAMBIO CLAVE */
+  width: 100%;
+  max-width: 200px;
 }
-
-
 
 input:focus {
   outline: none;
@@ -64,6 +65,47 @@ input:focus {
   padding: 15px;
   border-radius: 12px;
   border: 2px solid var(--borde);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* TIPO A: Proveedores (Filas altas 105px) */
+.tabla-grande tr {
+  height: 105px; /* Altura total de la fila */
+}
+
+.tabla-estandar thead tr {
+  height: 45px; 
+}
+
+.tabla-grande td {
+  padding: 10px;
+  vertical-align: middle; /* Centra el contenido si hay poco texto */
+}
+
+/* TIPO B: Historial (Filas estándar 61px) */
+.tabla-estandar tr {
+  height: 61px;
+}
+
+.tabla-estandar td {
+  padding: 8px;
+  vertical-align: middle;
+}
+
+/* Estilos comunes para celdas */
+th {
+  background-color: var(--header-tabla);
+  padding: 12px;
+  text-align: left;
+}
+
+td {
+  border-bottom: 1px solid var(--borde);
 }
 
 /* ---------- MODALES ---------- */
@@ -84,12 +126,14 @@ input:focus {
   border-radius: 14px;
   border: 2px solid var(--cafe-claro);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  width: 100%;
+
+  /* 🔥 CAMBIO CLAVE */
+  width: 90%;
   max-width: 520px;
 
-  /* 🔹 ESPACIADO INTERNO REAL */
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 14px;
 }
 
@@ -98,12 +142,14 @@ input:focus {
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
+  width: 100%;
 }
 
-/* ---------- INPUTS MÁS CORTOS ---------- */
+/* ---------- INPUTS EN MODAL ---------- */
 .modal-contenido input,
 .modal-contenido select {
-  max-width: 60%;
+  width: 100%;
+  max-width: 300px;
 }
 
 /* ---------- BOTONES DEL MODAL ---------- */
@@ -112,6 +158,9 @@ input:focus {
   justify-content: center;
   gap: 16px;
   margin-top: 20px;
+
+  /* 🔥 clave para resoluciones chicas */
+  flex-wrap: wrap;
 }
 
 .modal-botones button {
@@ -119,11 +168,27 @@ input:focus {
   padding: 8px 16px;
 }
 
-/* ---------- MODAL PEQUEÑO (PEDIR MÁS) ---------- */
+/* ---------- MODAL PEQUEÑO ---------- */
 .modal-contenido.pequeno {
   max-width: 420px;
 }
 
-.modalp{
+.modalp {
   margin: 1px;
+}
+
+/* ---------- AJUSTES PARA PANTALLAS BAJAS (LAPTOPS) ---------- */
+@media (max-width: 1366px) {
+  .modal-contenido {
+    padding: 20px;
+  }
+
+  .modal-botones {
+    gap: 10px;
+  }
+
+  input,
+  select {
+    max-width: 180px;
+  }
 }

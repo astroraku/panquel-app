@@ -27,6 +27,8 @@ import AdminPerfiles from "./pages/AdminPerfiles"; // ⬅️ NUEVO
 /* --------- ROUTER --------- */
 import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
+
+
 /* ===============================
    🔐 SOLO USUARIOS LOGUEADOS
 ================================ */

@@ -45,12 +45,25 @@
 .barra-superiorNO {
   display: flex;
   align-items: center;
-  gap: 16px;       /* ← separación entre botones */
-  margin-bottom: 20px;
+  gap: 16px;
 }
 
 /* Botones dentro de la barra */
 .barra-superiorNO .btn-normalNO {
   white-space: nowrap;
   width: 160px;
+}
+
+.modal.modal-finalizar {
+  width: 350px;
+  max-width: 90%;
+  padding: 20px;
+  text-align: center;
+
+  height: auto;              /* 🔥 clave */
+  min-height: unset;         /* por si acaso */
+  justify-content: center;   /* centra contenido */
+  background-color: var(--tarjeta);
+  border-radius: 16px;
+  border: 2px solid var(--cafe-claro);
 }

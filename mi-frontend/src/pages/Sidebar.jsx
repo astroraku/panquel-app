@@ -3,63 +3,74 @@ import { useState, useEffect } from "react";
 import { Window } from "@tauri-apps/api/window";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 
-import panquelLogo from "../img/panquel.gif";
+import panquelLogo from "../img/logofondo.png";
 import "../styles/Sidebar.css";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+
 
 export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
+    useEffect(() => {
+    if (!window.__TAURI__) return;
+
+    const appWindow = getCurrentWindow();
+    let unlisten;
+
+    const cerrar = async (event) => {
+      event.preventDefault();
+      try {
+        await fetch("http://127.0.0.1:8000/api/cerrar-backend/");
+        await new Promise(r => setTimeout(r, 200));
+      } catch (error) {
+        console.error("Error cerrando backend:", error);
+      }
+      await appWindow.close();
+    };
+
+    const setupListener = async () => {
+      unlisten = await appWindow.onCloseRequested(cerrar);
+    };
+
+    setupListener();
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
+
+
   const navigate = useNavigate();
   const location = useLocation();
   const ruta = location.pathname.toLowerCase();
-  const rol = localStorage.getItem("rol"); // 👑 ROL
-
-  // 🔴 Modal cerrar sesión
+  const rol = localStorage.getItem("rol");
+  const [prediccionActiva, setPrediccionActiva] = useState(null);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
-
-  // 🟢 Órdenes activas desde backend
-  const [ordenesActivas, setOrdenesActivas] = useState([]);
-  const [cargandoOrdenes, setCargandoOrdenes] = useState(false);
-  const [errorOrdenes, setErrorOrdenes] = useState(null);
-
-  // 🔹 Cargar órdenes activas SOLO en nueva orden
-  useEffect(() => {
-    if (ruta === "/nueva-orden") {
-      cargarOrdenesActivas();
-    }
-  }, [ruta]);
-
-  const cargarOrdenesActivas = async () => {
-    setCargandoOrdenes(true);
-    setErrorOrdenes(null);
-
-    try {
-      const res = await fetch("http://localhost:8000/api/ordenes-activas/");
-      if (!res.ok) throw new Error("Error al cargar órdenes");
-
-      const data = await res.json();
-      setOrdenesActivas(data);
-    } catch (err) {
-      console.error(err);
-      setErrorOrdenes("No se pudieron cargar");
-    } finally {
-      setCargandoOrdenes(false);
-    }
-  };
 
   const cerrarSesion = async () => {
     try {
       const win = Window.getCurrent();
-      await win.setSize(new LogicalSize(470, 390));
+      await win.setSize(new LogicalSize(490, 440));
       await win.center();
     } catch (err) {
       console.warn("No se pudo cambiar tamaño (no Tauri)", err);
     }
-
-    // 🔐 Limpiar sesión
     localStorage.removeItem("token");
     localStorage.removeItem("rol");
-
     navigate("/login");
   };
+
+  const cargarPrediccionActiva = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/prediccion/actual/");
+      const data = await res.json();
+      setPrediccionActiva(data);
+    } catch (error) {
+      console.error("Error predicción activa:", error);
+    }
+  };
+
+  useEffect(() => {
+    cargarPrediccionActiva();
+  }, [ruta]);
 
   return (
     <>
@@ -69,7 +80,7 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
           {sidebarAbierto ? "◀" : "▶"}
         </button>
 
-        {/* Logo */}
+        {/* 1. Logo Container */}
         <div className="logo-container-sidebar">
           <img
             src={panquelLogo}
@@ -78,6 +89,25 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
             onClick={() => navigate("/app")}
           />
         </div>
+
+        {/* 2. INFO DE ORDEN ACTIVA (Justo debajo del logo) */}
+        {sidebarAbierto && prediccionActiva?.activa && (
+          <div className="info-orden-sidebar">
+            <div className="status-badge">
+              <span className="dot-parpadeo"></span>
+              <span>Orden en curso</span>
+            </div>
+            <p className="fecha-sidebar">
+              {new Date(prediccionActiva.fecha).toLocaleDateString("es-MX", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
+        )}
 
         <div className="menu">
           <button
@@ -117,70 +147,36 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
             🏪 {sidebarAbierto && "Proveedores"}
           </button>
 
-          {/* ======== ADMIN (SOLO ADMIN) ======== */}
           {rol === "admin" && (
             <>
               <hr />
               <button
                 onClick={() => navigate("/admin/perfiles")}
-                className={`menu-item ${
-                  ruta === "/admin/perfiles" ? "activo" : ""
-                }`}
+                className={`menu-item ${ruta === "/admin/perfiles" ? "activo" : ""}`}
               >
                 🛠 {sidebarAbierto && "Administrar"}
               </button>
             </>
           )}
-
-          {/* ================= ÓRDENES ACTIVAS ================= */}
-          {ruta === "/nueva-orden" && sidebarAbierto && (
-            <div className="seccion-extra-nueva-orden">
-              <h2 className="titulo-menuNO">Órdenes Activas</h2>
-
-              <div className="lista-activosNO">
-                {cargandoOrdenes && <p>Cargando...</p>}
-                {errorOrdenes && <p>{errorOrdenes}</p>}
-
-                {!cargandoOrdenes &&
-                  !errorOrdenes &&
-                  ordenesActivas.length === 0 && (
-                    <p>No hay órdenes activas</p>
-                  )}
-
-                {ordenesActivas.map((orden) => (
-                  <p key={orden.id}>{orden.proveedor}</p>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="espaciador"></div>
-
-          {/* Cerrar sesión */}
-          <button
-            onClick={() => setMostrarConfirmacion(true)}
-            className="menu-item salir"
-          >
-            🚪 {sidebarAbierto && "Cerrar sesión"}
-          </button>
         </div>
+
+        <button
+          onClick={() => setMostrarConfirmacion(true)}
+          className="menu-item salir"
+        >
+          🚪 {sidebarAbierto && "Cerrar sesión"}
+        </button>
+        <hr />
       </div>
 
-      {/* ================= MODAL ================= */}
+      {/* Modal de confirmación (Se mantiene igual) */}
       {mostrarConfirmacion && (
-        <div
-          className="modal-overlayNO"
-          onClick={() => setMostrarConfirmacion(false)}
-        >
+        <div className="modal-overlayNO" onClick={() => setMostrarConfirmacion(false)}>
           <div className="modalNO" onClick={(e) => e.stopPropagation()}>
             <h3>¿Cerrar sesión?</h3>
             <p className="pNO">¿Estás seguro de que deseas salir?</p>
-
             <div className="modal-buttonsNO">
-              <button
-                className="btn-cancelarNO"
-                onClick={() => setMostrarConfirmacion(false)}
-              >
+              <button className="btn-cancelarNO" onClick={() => setMostrarConfirmacion(false)}>
                 Cancelar
               </button>
               <button className="btn-confirmarNO" onClick={cerrarSesion}>
