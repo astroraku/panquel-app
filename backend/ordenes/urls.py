@@ -28,11 +28,12 @@ urlpatterns = [
     path("orden/crear-columna/", views.crear_orden_columna),
     path("proveedores/crear/", views.crear_proveedor),
     path("producto/crear/", views.crear_producto),
-    path("producto/<int:id>/", views.producto_detalle),
+    path("producto/<str:id>/", views.producto_detalle),
     path("ia/despertar/", views.despertar_modelo),
     path("prediccion/guardar/", views.guardar_prediccion),
     path("prediccion/limpiar/", views.limpiar_prediccion),
     path("prediccion/actual/", views.prediccion_actual),
     path('api/cerrar-backend/', views.cerrar_backend, name='cerrar_backend'),
+    path("usuario/<int:id>/eliminar/", views.eliminar_usuario),
+    path("proveedores/<str:id>/", views.eliminar_proveedor),
 ]
-

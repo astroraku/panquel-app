@@ -134,10 +134,20 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CORS_ALLOW_ALL_ORIGINS = True 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = ["*"]
-CORS_ALLOW_METHODS = ["*"]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "content-type",
+]
+from corsheaders.defaults import default_methods
+
+CORS_ALLOW_METHODS = list(default_methods)
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
@@ -148,3 +158,14 @@ CSRF_TRUSTED_ORIGINS = [
     "http://tauri.localhost"
 ]
 
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]

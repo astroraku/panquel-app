@@ -13,6 +13,7 @@ export default function Proveedores() {
   const [proveedores, setProveedores] = useState([]);
 
   const [nuevoProveedor, setNuevoProveedor] = useState({
+    id: "",        // 👈 NUEVO
     nombre: "",
     telefono: "",
     email: "",
@@ -271,6 +272,9 @@ useEffect(() => {
               <p className="modalp"><strong>Email</strong></p>
               <input type="text" value={nuevoProveedor.email}
                 onChange={(e) => setNuevoProveedor({ ...nuevoProveedor, email: e.target.value })} />
+              <p className="modalp"><strong>ID:</strong></p>
+              <input type="text" value={nuevoProveedor.id}
+                onChange={(e) => setNuevoProveedor({ ...nuevoProveedor, id: e.target.value })} />
 
               <div className="modal-buttonsNO">
                 <button className="btn-guardar" onClick={agregarProveedor}>💾 Agregar</button>
@@ -326,7 +330,17 @@ useEffect(() => {
                   })
                 }
               />
-
+                <p className="modalp"><strong>ID:</strong></p>  
+              <input
+                type="text"
+                value={proveedorEditando.id}
+                onChange={(e) =>
+                  setProveedorEditando({
+                    ...proveedorEditando,
+                    id: e.target.value,
+                  })
+                }
+              />
               {/* 🔥 CLASE CORRECTA */}
               <div className="modal-botones">
                 <button className="btn-guardar" onClick={guardarEdicion}>

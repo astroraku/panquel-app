@@ -10,6 +10,8 @@ npm run build
 
 npm run tauri build
 backend-x86_64-pc-windows-msvc
+
+
 | Elemento                         | Color                   | 
 | -------------------------------- | ----------------------- |
 | Fondo general                    | `#f8f1e7` (crema)       |

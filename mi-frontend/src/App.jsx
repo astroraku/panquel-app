@@ -131,7 +131,7 @@ export default function App() {
         </div>
 
         <div className="tarjeta dashboard-box">
-          <h2>Producto menos vendido</h2>
+          <h2>Producto menos pedido</h2>
           <p className="numero">{dashboard.productoMenosVendido}</p>
         </div>
       </div>

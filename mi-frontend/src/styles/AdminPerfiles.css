@@ -54,3 +54,12 @@
   align-items: center;
   gap: 8px;
 }
+
+
+.modal-eliminar {
+  width: 100%;
+  max-width: 320px; /* 👈 controla el tamaño */
+  padding: 16px;
+  border-radius: 12px;
+  height: 160px;
+}

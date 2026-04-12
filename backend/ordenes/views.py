@@ -23,7 +23,7 @@ import time
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 # 🔥 IMPORTACIÓN CONSOLIDADA (Evita el error de registro doble)
-from .models import Producto, Proveedor, Prediccion, EstadoPrediccion, Orden, DetalleOrden
+from .models import Producto, Proveedor, Prediccion, EstadoPrediccion
 
 # 🔵 URL DEL MODELO IA EN RENDER
 MODEL_URL = "https://modelo-narx-panquel-v2.onrender.com"
@@ -52,7 +52,7 @@ def prediccion_actual(request):
     try:
         with connection.cursor() as cursor:
             # 1. Buscamos primero la orden activa
-            cursor.execute("SELECT id, fecha FROM ordenes_estadoprediccion WHERE activa = true LIMIT 1")
+            cursor.execute("SELECT id, fecha FROM estadoprediccion WHERE activa = true LIMIT 1")
             row = cursor.fetchone()
 
             if not row:
@@ -117,12 +117,12 @@ def guardar_prediccion(request):
             cursor.execute("DELETE FROM prediccion_org")
             
             # 2. Marcamos TODAS las órdenes de estado anteriores como inactivas
-            cursor.execute("UPDATE ordenes_estadoprediccion SET activa = false")
+            cursor.execute("UPDATE estadoprediccion SET activa = false")
             
             # --- PASO B: CREAR NUEVA INSTANCIA ---
             # 3. Creamos el nuevo estado activo (usamos SQL para evitar el warning de registro)
             cursor.execute(
-                "INSERT INTO ordenes_estadoprediccion (activa, fecha) VALUES (true, NOW()) RETURNING id"
+                "INSERT INTO estadoprediccion (activa, fecha) VALUES (true, NOW()) RETURNING id"
             )
             # Obtenemos el ID del estado que acabamos de crear
             nuevo_estado_id = cursor.fetchone()[0]
@@ -190,36 +190,85 @@ def despertar_modelo(request):
     except:
         return Response({"status": "sleep"})
 
+
 @csrf_exempt
 def crear_producto(request):
     if request.method == "POST":
-        data = json.loads(request.body)
-
         try:
-            cantidad = int(data.get("cantidad"))
+            data = json.loads(request.body)
         except:
-            return JsonResponse(
-                {"error": "Cantidad debe ser número"},
-                status=400
-            )
+            return JsonResponse({"error": "JSON inválido"}, status=400)
 
+        nombre = data.get("nombre")
+        cantidad = data.get("cantidad")
+        proveedor_id = data.get("proveedor_id")
+
+        # 🔍 Validaciones básicas
+        if not nombre:
+            return JsonResponse({"error": "El nombre es obligatorio"}, status=400)
+
+        if not cantidad:
+            return JsonResponse({"error": "La cantidad es obligatoria"}, status=400)
+
+        if not proveedor_id:
+            return JsonResponse({"error": "Proveedor requerido"}, status=400)
+
+        # 🔍 Validar proveedor
         try:
-            proveedor = Proveedor.objects.get(id=data["proveedor_id"])
+            proveedor = Proveedor.objects.get(id=proveedor_id)
         except Proveedor.DoesNotExist:
             return JsonResponse({"error": "Proveedor inválido"}, status=400)
 
-        prod = Producto.objects.create(
-            nombre=data["nombre"],
-            cantidad=cantidad,
-            proveedor=proveedor
-        )
+        # ✅ Crear producto (cantidad ahora es texto)
+        try:
+            prod = Producto.objects.create(
+                nombre=nombre,
+                cantidad=cantidad,  # 👈 ahora acepta "3 piezas"
+                proveedor=proveedor
+            )
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
-        return JsonResponse({"nombre": prod.nombre})
+        return JsonResponse({
+            "mensaje": "Producto creado correctamente",
+            "producto": {
+                "id": prod.nombre,
+                "nombre": prod.nombre,
+                "cantidad": prod.cantidad,
+                "proveedor": proveedor.nombre if hasattr(proveedor, "nombre") else proveedor.id
+            }
+        })
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)
+
+@csrf_exempt
+def eliminar_usuario(request, id):
+    if request.method == "DELETE":
+        try:
+            user = User.objects.get(id=id)
+            user.delete()
+            return JsonResponse({"success": True})
+        except User.DoesNotExist:
+            return JsonResponse({"error": "No existe"}, status=404)
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)
+
+@csrf_exempt
+def eliminar_proveedor(request, id):
+    if request.method == "DELETE":
+        try:
+            proveedor = Proveedor.objects.get(id=id)
+            proveedor.delete()
+            return JsonResponse({"ok": True})
+        except Proveedor.DoesNotExist:
+            return JsonResponse({"error": "Proveedor no existe"}, status=404)
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)
 
 @csrf_exempt
 def producto_detalle(request, id):
     try:
-        prod = Producto.objects.get(id=id)
+        prod = Producto.objects.get(nombre=id)
     except Producto.DoesNotExist:
         return JsonResponse({"error": "No existe"}, status=404)
 
@@ -229,18 +278,8 @@ def producto_detalle(request, id):
         except:
             return JsonResponse({"error": "JSON inválido"}, status=400)
 
-        # 🔥 VALIDACIÓN DE CANTIDAD
-        try:
-            cantidad = int(data.get("cantidad"))
-        except:
-            return JsonResponse(
-                {"error": "Cantidad debe ser un número"},
-                status=400
-            )
-
-        # 🔥 ACTUALIZACIÓN SEGURA
         prod.nombre = data.get("nombre")
-        prod.cantidad = cantidad
+        prod.cantidad = data.get("cantidad")
         prod.proveedor_id = data.get("proveedor_id")
         prod.save()
 
@@ -257,7 +296,21 @@ def crear_proveedor(request):
     if request.method == "POST":
         data = json.loads(request.body)
 
+        proveedor_id = data.get("id")  # 👈 NUEVO
+
+        # 🔴 VALIDACIONES
+        if not proveedor_id:
+            return JsonResponse({"error": "ID requerido"}, status=400)
+
+        if len(proveedor_id) != 3:
+            return JsonResponse({"error": "El ID debe tener 3 caracteres"}, status=400)
+
+        # evitar duplicados
+        if Proveedor.objects.filter(id=proveedor_id).exists():
+            return JsonResponse({"error": "Ese ID ya existe"}, status=400)
+
         proveedor = Proveedor.objects.create(
+            id=proveedor_id,  # 👈 IMPORTANTE
             name=data.get("nombre"),
             telephone=data.get("telefono"),
             email=data.get("email"),
@@ -357,10 +410,6 @@ def last(request):
         "items": items_para_frontend
     }, safe=False)
 
-
-from django.http import JsonResponse
-from django.db import connection
-from datetime import datetime
 
 def historial_pedidos(request):
     try:

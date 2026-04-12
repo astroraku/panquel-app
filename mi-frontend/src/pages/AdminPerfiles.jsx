@@ -313,7 +313,7 @@ const confirmarEliminar = () => {
 
         <div className="modal-overlay">
 
-          <div className="modal">
+          <div className="modal modal-eliminar">
 
             <h3>Eliminar usuario</h3>
 

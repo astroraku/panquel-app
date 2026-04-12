@@ -147,7 +147,7 @@ async function cargarProveedores() {
     try {
       if (modoEdicion) {
         // ✏️ EDITAR
-        await fetch(`${API_URL}/producto/${productoSeleccionado.id}/`, {
+        await fetch(`${API_URL}/producto/${productoSeleccionado.nombre}/`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json"
@@ -178,7 +178,7 @@ async function cargarProveedores() {
     if (!productoSeleccionado) return;
 
     try {
-      await fetch(`${API_URL}/producto/${productoSeleccionado.id}/`, {
+      await fetch(`${API_URL}/producto/${productoSeleccionado.nombre}/`, {
         method: "DELETE"
       });
 
@@ -275,7 +275,7 @@ useEffect(() => {
 
             <tbody>
               {productosPagina.map((producto) => (
-                <tr key={producto.id}>
+                <tr key={producto.nombre}>
                   <td>{producto.nombre}</td>
                   <td>{producto.cantidad}</td>
                   <td>{producto.proveedor_nombre}</td>
@@ -374,9 +374,9 @@ useEffect(() => {
 
 
                 <input
-                  type="number"
+                  type="text"
                   placeholder="Cantidad"
-                  value={formData.cantidad}
+                  value={formData.cantidad || ""}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
