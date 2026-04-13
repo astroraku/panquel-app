@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-g8&j(0m&#zy*qst0ul&9uqckr+w%0-=4g7f6d**98yo4%ygpx)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'tauri.localhost',
+]
 
 
 # Application definition
@@ -138,13 +142,10 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "tauri://localhost",
+    "http://tauri.localhost",
 ]
 
-from corsheaders.defaults import default_headers
-
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    "content-type",
-]
 from corsheaders.defaults import default_methods
 
 CORS_ALLOW_METHODS = list(default_methods)
