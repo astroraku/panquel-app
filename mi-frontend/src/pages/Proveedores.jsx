@@ -131,6 +131,16 @@ useEffect(() => {
 
       setModalAgregar(false);
 
+      if (nuevoProveedor.id.length !== 3) {
+        alert("El ID debe tener exactamente 3 letras");
+        return;
+      }
+
+      if (nuevoProveedor.telefono.length !== 10) {
+        alert("El teléfono debe tener 10 dígitos");
+        return;
+      }
+
     } catch (error) {
       console.error("Error creando proveedor:", error);
     }
@@ -261,24 +271,75 @@ useEffect(() => {
             <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
               <h2>Agregar proveedor</h2>
 
+              {/* ✅ NOMBRE */}
               <p className="modalp"><strong>Nombre:</strong></p>
-              <input type="text" value={nuevoProveedor.nombre}
-                onChange={(e) => setNuevoProveedor({ ...nuevoProveedor, nombre: e.target.value })} />
+              <input
+                type="text"
+                value={nuevoProveedor.nombre}
+                onChange={(e) =>
+                  setNuevoProveedor({
+                    ...nuevoProveedor,
+                    nombre: e.target.value
+                  })
+                }
+              />
 
+              {/* ✅ TELÉFONO */}
               <p className="modalp"><strong>Teléfono:</strong></p>
-              <input type="text" value={nuevoProveedor.telefono}
-                onChange={(e) => setNuevoProveedor({ ...nuevoProveedor, telefono: e.target.value })} />
+              <input
+                type="text"
+                value={nuevoProveedor.telefono}
+                maxLength={10}
+                onChange={(e) => {
+                  const soloNumeros = e.target.value.replace(/\D/g, "");
+                  setNuevoProveedor({
+                    ...nuevoProveedor,
+                    telefono: soloNumeros
+                  });
+                }}
+              />
 
+              {/* ✅ EMAIL */}
               <p className="modalp"><strong>Email</strong></p>
-              <input type="text" value={nuevoProveedor.email}
-                onChange={(e) => setNuevoProveedor({ ...nuevoProveedor, email: e.target.value })} />
+              <input
+                type="text"
+                value={nuevoProveedor.email}
+                onChange={(e) =>
+                  setNuevoProveedor({
+                    ...nuevoProveedor,
+                    email: e.target.value
+                  })
+                }
+              />
+
+              {/* ✅ ID */}
               <p className="modalp"><strong>ID:</strong></p>
-              <input type="text" value={nuevoProveedor.id}
-                onChange={(e) => setNuevoProveedor({ ...nuevoProveedor, id: e.target.value })} />
+              <input
+                type="text"
+                value={nuevoProveedor.id}
+                maxLength={3}
+                onChange={(e) => {
+                  const soloLetras = e.target.value
+                    .replace(/[^a-zA-Z]/g, "")
+                    .toUpperCase();
+
+                  setNuevoProveedor({
+                    ...nuevoProveedor,
+                    id: soloLetras
+                  });
+                }}
+              />
 
               <div className="modal-buttonsNO">
-                <button className="btn-guardar" onClick={agregarProveedor}>💾 Agregar</button>
-                <button className="btn-cerrar" onClick={() => setModalAgregar(false)}>Cancelar</button>
+                <button className="btn-guardar" onClick={agregarProveedor}>
+                  💾 Agregar
+                </button>
+                <button
+                  className="btn-cerrar"
+                  onClick={() => setModalAgregar(false)}
+                >
+                  Cancelar
+                </button>
               </div>
             </div>
           </div>

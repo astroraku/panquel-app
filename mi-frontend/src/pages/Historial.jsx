@@ -29,7 +29,7 @@ export default function Historial() {
 
   const [pedidos, setPedidos] = useState([]);
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
-
+  const [mostrarAvisoPDF, setMostrarAvisoPDF] = useState(false);
   // 🔥 FILTRO UNIFICADO
   const [filtro, setFiltro] = useState({
     busqueda: "",
@@ -349,6 +349,10 @@ console.log(pedidos);
                         fecha: pedidoSeleccionado.fecha,
                         productos: pedidoSeleccionado.productos
                       });
+
+                      // 🔥 MOSTRAR AVISO
+                      setMostrarAvisoPDF(true);
+                      setTimeout(() => setMostrarAvisoPDF(false), 2500);
                     }}
                   >
                     📥
@@ -369,7 +373,11 @@ console.log(pedidos);
             </div>
           </div>
         )}
-
+        {mostrarAvisoPDF && (
+          <div className="avisoNO">
+            <p>✔ PDF descargado correctamente</p>
+          </div>
+        )}
       </div>
     </div>
   );

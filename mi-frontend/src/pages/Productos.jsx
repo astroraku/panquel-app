@@ -169,6 +169,8 @@ async function cargarProveedores() {
       await cargarProductos();
       setMostrarModal(false);
 
+      window.location.reload();
+
     } catch (error) {
       console.error("Error guardando producto:", error);
     }
@@ -185,6 +187,8 @@ async function cargarProveedores() {
       await cargarProductos();
       setMostrarEliminar(false);
 
+      window.location.reload();
+
     } catch (error) {
       console.error("Error eliminando:", error);
     }
@@ -196,44 +200,41 @@ useEffect(() => {
 
     const contenedor = tablaRef.current;
 
-    // 📏 posición real de la tabla
     const top = contenedor.getBoundingClientRect().top;
-
-    // 📏 espacio disponible real
     const alturaDisponible = window.innerHeight - top - 20;
 
-    // 🔥 ALTURA HEADER
     let alturaHeader = 0;
     const header = contenedor.querySelector("thead");
     if (header) {
       alturaHeader = header.offsetHeight;
     }
 
-    // 🔥 ALTURA FILA
     let alturaFila = 50;
     const fila = contenedor.querySelector("tbody tr");
     if (fila) {
       alturaFila = fila.offsetHeight;
     }
 
-    // 🔥 CALCULO REAL
     const filas = Math.floor(
       (alturaDisponible - alturaHeader) / alturaFila
     );
 
-    // 🔥 AJUSTE DINÁMICO (anti scroll fantasma)
     const hayScroll =
       contenedor.scrollHeight > contenedor.clientHeight;
 
     setProductosPorPagina(
-      filas > 3 ? (hayScroll ? filas -1 : filas) : 3
+      filas > 3 ? (hayScroll ? filas - 1 : filas) : 3
     );
   };
 
-  calcularFilas();
+  // 🔥 ESTA ES LA CLAVE
+  setTimeout(() => {
+    calcularFilas();
+  }, 0);
 
   window.addEventListener("resize", calcularFilas);
   return () => window.removeEventListener("resize", calcularFilas);
+
 }, [productos]);
 
   return (
@@ -412,17 +413,6 @@ useEffect(() => {
           </div>
         )}
 
-        {/* ELIMINAR (NO SE TOCA) */}
-        {mostrarEliminar && (
-          <div className="modal-overlay">
-            <div className="modal-contenido">
-              <h2>¿Eliminar producto?</h2>
-
-              <button onClick={confirmarEliminar}>Sí</button>
-              <button onClick={() => setMostrarEliminar(false)}>No</button>
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
