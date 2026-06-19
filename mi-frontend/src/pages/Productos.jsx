@@ -2,6 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import "../styles/Productos.css";
+import {
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaChevronLeft,
+  FaChevronRight,
+  FaSave,
+  FaTimes,
+  FaSearch
+} from "react-icons/fa";
 
 const API_URL = "http://127.0.0.1:8000/api";
 
@@ -247,7 +257,7 @@ useEffect(() => {
       <div className="contenido">
 
         <div className="header-contenido">
-
+          <FaSearch className="icono-buscador" />
           <input
             type="text"
             placeholder="Buscar producto o proveedor"
@@ -258,7 +268,9 @@ useEffect(() => {
           />
 
           <button className="btn-agregar" onClick={abrirModalNuevo}>
-            ➕ Agregar Producto
+            
+            <FaPlus className="icono-btn"/> 
+              Agregar Producto
           </button>
         </div>
 
@@ -288,14 +300,16 @@ useEffect(() => {
                         className="bton-acciones"
                         onClick={() => abrirModalEditar(producto)}
                       >
-                        ✏️ Editar
+                        <FaEdit className="icono-btn" />
+                            Editar
                       </button>
 
                       <button
                         className="bton-acciones eliminar"
                         onClick={() => abrirModalEliminar(producto)}
                       >
-                        🗑 Eliminar
+                        <FaTrash className="icono-btn" />
+                         Eliminar
                       </button>
                     </div>
                   </td>
@@ -312,7 +326,8 @@ useEffect(() => {
               disabled={paginaActual === 1}
               onClick={() => setPaginaActual(paginaActual - 1)}
             >
-              ◀ Anterior
+              <FaChevronLeft className="icono-btn" />
+                Anterior    
             </button>
 
             <span>
@@ -323,7 +338,8 @@ useEffect(() => {
               disabled={paginaActual === totalPaginas}
               onClick={() => setPaginaActual(paginaActual + 1)}
             >
-              Siguiente ▶
+              Siguiente
+              <FaChevronRight className="icono-btn" />
             </button>
           </div>
         )}
@@ -368,6 +384,7 @@ useEffect(() => {
                   placeholder="Nombre"
                   id="modal"
                   value={formData.nombre}
+                  disabled={modoEdicion}
                   onChange={(e) =>
                     setFormData({ ...formData, nombre: e.target.value })
                   }
@@ -403,9 +420,10 @@ useEffect(() => {
                   ))}
                 </select>
 
-                <button type="submit">Guardar</button>
+                <button type="submit"><FaSave className="icono-btn" />Guardar</button>
                 <button type="button" onClick={cerrarModal}>
-                  Cancelar
+                  <FaTimes className="icono-btn" />
+                    Cancelar
                 </button>
 
               </form>

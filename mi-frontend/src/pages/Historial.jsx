@@ -4,6 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { generarPDFDesdeDatos } from "../utils/pdf";
+import {
+  FaChevronLeft,
+  FaChevronRight,
+  FaDownload,
+  FaTimes,
+  FaSearch
+} from "react-icons/fa";
 const API_URL = "http://127.0.0.1:8000/api";
 
 function parseFecha(fechaStr) {
@@ -200,14 +207,18 @@ console.log(pedidos);
         {/* 🔍 FILTROS */}
         <div className="filtros">
 
-          <input
-            type="text"
-            placeholder="Buscar por código"
-            value={filtro.busqueda}
-            onChange={(e) =>
-              setFiltro({ ...filtro, busqueda: e.target.value })
-            }
-          />
+          <div className="buscador-wrapper">
+            <FaSearch className="icono-buscador" />
+
+            <input
+              type="text"
+              placeholder="Buscar por código"
+              value={filtro.busqueda}
+              onChange={(e) =>
+                setFiltro({ ...filtro, busqueda: e.target.value })
+              }
+            />
+          </div>
 
           <input
             type="month"
@@ -259,7 +270,8 @@ console.log(pedidos);
               disabled={paginaActual === 1}
               onClick={() => setPaginaActual(paginaActual - 1)}
             >
-              ◀
+              <FaChevronLeft className="icono-btn" />
+                Anterior
             </button>
 
             <span>
@@ -270,7 +282,9 @@ console.log(pedidos);
               disabled={paginaActual === totalPaginas}
               onClick={() => setPaginaActual(paginaActual + 1)}
             >
-              ▶
+              Siguiente
+              <FaChevronRight className="icono-btn" />
+                
             </button>
 
           </div>
@@ -319,24 +333,26 @@ console.log(pedidos);
                 {/* CENTRO REAL */}
                 {totalPaginasProductos > 1 && (
                   <div className="paginacion-centro">
-                    <button
-                      disabled={paginaProductos === 1}
-                      onClick={() => setPaginaProductos(paginaProductos - 1)}
-                    >
-                      ◀
-                    </button>
 
-                    <span>
-                      {paginaProductos} / {totalPaginasProductos}
-                    </span>
+                  <button
+                    disabled={paginaProductos === 1}
+                    onClick={() => setPaginaProductos(paginaProductos - 1)}
+                  >
+                    <FaChevronLeft className="icono-btn" />
+                  </button>
 
-                    <button
-                      disabled={paginaProductos === totalPaginasProductos}
-                      onClick={() => setPaginaProductos(paginaProductos + 1)}
-                    >
-                      ▶
-                    </button>
-                  </div>
+                  <span>
+                    {paginaProductos} / {totalPaginasProductos}
+                  </span>
+
+                  <button
+                    disabled={paginaProductos === totalPaginasProductos}
+                    onClick={() => setPaginaProductos(paginaProductos + 1)}
+                  >
+                    <FaChevronRight className="icono-btn" />
+                  </button>
+
+                </div>
                 )}
 
                 {/* DERECHA */}
@@ -355,7 +371,7 @@ console.log(pedidos);
                       setTimeout(() => setMostrarAvisoPDF(false), 2500);
                     }}
                   >
-                    📥
+                    <FaDownload className="icono-btn" />
                   </button>
 
                 
@@ -367,7 +383,8 @@ console.log(pedidos);
                     className="btn-normalNO"
                     onClick={() => setPedidoSeleccionado(null)}
                   >
-                    Cerrar
+                      <FaTimes className="icono-btn" />
+                      Cerrar
                   </button>
                   </div>
             </div>

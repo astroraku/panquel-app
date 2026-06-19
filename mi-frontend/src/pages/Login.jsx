@@ -134,7 +134,7 @@ export default function Login() {
       // 🔐 GUARDAR SESIÓN
       localStorage.setItem("token", data.token);
       localStorage.setItem("rol", rolFinal);
-
+      localStorage.setItem("username", data.username);
       console.log("TOKEN GUARDADO:", data.token);
       console.log("ROL FINAL:", rolFinal);
 

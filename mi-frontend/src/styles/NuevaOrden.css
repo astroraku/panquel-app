@@ -54,16 +54,138 @@
   width: 160px;
 }
 
+/* Modal */
 .modal.modal-finalizar {
   width: 350px;
   max-width: 90%;
   padding: 20px;
   text-align: center;
 
-  height: auto;              /* 🔥 clave */
-  min-height: unset;         /* por si acaso */
-  justify-content: center;   /* centra contenido */
+  height: auto;
+  min-height: unset;
+  justify-content: center;
+
   background-color: var(--tarjeta);
   border-radius: 16px;
   border: 2px solid var(--cafe-claro);
+}
+
+/* =========================
+   COLUMNA CANTIDAD
+========================= */
+
+.contenedor-cantidad {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Mueve todo el bloque (input + texto) a la derecha */
+  gap: 10px;
+}
+
+
+/* Input */
+.input-tablaNO {
+  width: 85px;
+  text-align: center;
+  justify-self: center;
+}
+
+.dif-verde,
+.dif-roja,
+.dif-placeholder {
+
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Verde */
+.dif-verde {
+  color: #28a745;
+}
+
+/* Rojo */
+.dif-roja {
+  color: #dc3545;
+}
+
+/* Placeholder invisible para mantener alineación */
+.dif-placeholder {
+  visibility: hidden;
+}
+
+
+
+.ultima-cantidad {
+  font-weight: 600;
+  color: #8b5e3c;
+  opacity: 0.85;
+}
+
+.aviso-impreciso {
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.aviso-impreciso.rojo {
+  color: #ff6b6b;
+}
+
+.aviso-impreciso.amarillo {
+  color: #ffb347;
+}
+
+.estado-prediccion {
+  width: 140px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+
+  min-height: 24px;
+}
+
+.aviso-impreciso {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.aviso-impreciso.rojo {
+  color: #d9534f;
+}
+
+.aviso-impreciso.amarillo {
+  color: #d9a441;
+}
+
+.tabla-estandar {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Producto */
+.tabla-estandar th:nth-child(1),
+.tabla-estandar td:nth-child(1) {
+  width: 25%;
+}
+
+/* Proveedor */
+.tabla-estandar th:nth-child(2),
+.tabla-estandar td:nth-child(2) {
+  width: 25%;
+}
+
+/* Último pedido */
+.tabla-estandar th:nth-child(3),
+.tabla-estandar td:nth-child(3) {
+  width: 15%;
+}
+
+/* Cantidad */
+.tabla-estandar th:nth-child(4),
+.tabla-estandar td:nth-child(4) {
+  width: 35%;
+  align-items: center;
 }

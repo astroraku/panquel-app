@@ -2,7 +2,17 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Window } from "@tauri-apps/api/window";
 import { LogicalSize } from "@tauri-apps/api/dpi";
-
+import {
+  FaClock,
+  FaFileInvoice,
+  FaBox,
+  FaHistory,
+  FaStore,
+  FaTools,
+  FaSignOutAlt,
+  FaChevronLeft,
+  FaChevronRight
+} from "react-icons/fa";
 import panquelLogo from "../img/logofondo.png";
 import "../styles/Sidebar.css";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -77,7 +87,11 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
       <div className={`sidebar ${sidebarAbierto ? "abierto" : "cerrado"}`}>
         {/* Botón expandir */}
         <button className="toggle-btn" onClick={toggleSidebar}>
-          {sidebarAbierto ? "◀" : "▶"}
+          {sidebarAbierto ? (
+              <FaChevronLeft size={16} />
+            ) : (
+              <FaChevronRight size={16} />
+            )}
         </button>
 
         {/* 1. Logo Container */}
@@ -114,21 +128,24 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
             onClick={() => navigate("/ultima-orden")}
             className={`menu-item ${ruta === "/ultima-orden" ? "activo" : ""}`}
           >
-            🕒 {sidebarAbierto && "Última Orden"}
+            <FaClock className="icono-menu" />
+            {sidebarAbierto && "Última Orden"}
           </button>
 
           <button
             onClick={() => navigate("/nueva-orden")}
             className={`menu-item ${ruta === "/nueva-orden" ? "activo" : ""}`}
           >
-            🧾 {sidebarAbierto && "Generar Orden"}
+            <FaFileInvoice className="icono-menu" />
+            {sidebarAbierto && "Generar Orden"}
           </button>
 
           <button
             onClick={() => navigate("/productos")}
             className={`menu-item ${ruta === "/productos" ? "activo" : ""}`}
           >
-            📦 {sidebarAbierto && "Productos"}
+            <FaBox className="icono-menu" />
+            {sidebarAbierto && "Productos"}
           </button>
 
           <hr />
@@ -137,14 +154,16 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
             onClick={() => navigate("/historial")}
             className={`menu-item ${ruta === "/historial" ? "activo" : ""}`}
           >
-            📚 {sidebarAbierto && "Historial"}
+            <FaHistory className="icono-menu" />
+            {sidebarAbierto && "Historial"}
           </button>
 
           <button
             onClick={() => navigate("/proveedores")}
             className={`menu-item ${ruta === "/proveedores" ? "activo" : ""}`}
           >
-            🏪 {sidebarAbierto && "Proveedores"}
+            <FaStore className="icono-menu" />
+            {sidebarAbierto && "Proveedores"}
           </button>
 
           {rol === "admin" && (
@@ -154,7 +173,8 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
                 onClick={() => navigate("/admin/perfiles")}
                 className={`menu-item ${ruta === "/admin/perfiles" ? "activo" : ""}`}
               >
-                🛠 {sidebarAbierto && "Administrar"}
+                <FaTools className="icono-menu" />
+                {sidebarAbierto && "Administrar"}
               </button>
             </>
           )}
@@ -164,7 +184,8 @@ export default function Sidebar({ sidebarAbierto, toggleSidebar }) {
           onClick={() => setMostrarConfirmacion(true)}
           className="menu-item salir"
         >
-          🚪 {sidebarAbierto && "Cerrar sesión"}
+          <FaSignOutAlt className="icono-menu" />
+          {sidebarAbierto && "Cerrar sesión"}
         </button>
         <hr />
       </div>

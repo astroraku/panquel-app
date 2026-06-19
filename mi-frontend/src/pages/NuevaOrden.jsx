@@ -3,6 +3,16 @@ import { useState, useEffect, useRef } from "react";
 import Sidebar from "./Sidebar";
 import "../styles/NuevaOrden.css";
 import { generarPDFDesdeDatos } from "../utils/pdf";
+import {
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaChevronLeft,
+  FaChevronRight,
+  FaSave,
+  FaTimes,
+  FaSearch
+} from "react-icons/fa";
 
 // 🔗 URL BACKEND
 const API_URL = "http://127.0.0.1:8000/api";
@@ -13,65 +23,80 @@ export default function NuevaOrden() {
   /* =====================================================
      🔥 ESTADO BACKEND
   ===================================================== */
-
+  const [diferenciasIA, setDiferenciasIA] = useState({});
   const [backendActivo, setBackendActivo] = useState(false);
   const [verificandoBackend, setVerificandoBackend] = useState(true);
   const [productosOriginales, setProductosOriginales] = useState([]);
   const [hayCambios, setHayCambios] = useState(false);
   const [ordenHoyRealizada, setOrdenHoyRealizada] = useState(false);
   const [mostrarModalBloqueo, setMostrarModalBloqueo] = useState(false);
+  const [ordenGeneradaIA, setOrdenGeneradaIA] = useState(false);
+  const [productosIAOriginales, setProductosIAOriginales] = useState([]);
+  const rol = localStorage.getItem("rol");
+  const esAdmin = rol === "admin";
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
+  const [finalizando, setFinalizando] = useState(false);
 
   const verificarOrdenDelDia = async () => {
-  try {
-    const res = await fetch(`${API_URL}/historial/`); // O el endpoint donde obtienes las órdenes finalizadas
-    const ordenes = await res.json();
-    
-    const hoy = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-    
-    // Buscamos si hay alguna orden cuya fecha sea hoy
-    const yaExiste = ordenes.some(orden => {
-      const fechaOrden = new Date(orden.fecha).toISOString().split('T')[0];
-      return fechaOrden === hoy;
-    });
+    try {
+      const res = await fetch(`${API_URL}/historial/`);
+      const ordenes = await res.json();
 
-    if (yaExiste) {
-      setOrdenHoyRealizada(true);
+      // 🔥 MISMO FORMATO QUE DJANGO:
+      // 14-May-26
+      const hoy = new Date()
+        .toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "2-digit"
+        })
+        .replace(/ /g, "-");
+
+      console.log("Fecha hoy:", hoy);
+
+      const yaExiste = ordenes.some((orden) => {
+        return (
+          String(orden.fecha).trim().toLowerCase() ===
+          hoy.trim().toLowerCase()
+        );
+      });
+
+      setOrdenHoyRealizada(yaExiste);
+
+    } catch (error) {
+      console.error("Error verificando orden del día:", error);
     }
-  } catch (error) {
-    console.error("Error verificando orden del día:", error);
-  }
-};
+  };
 
-  useEffect(() => {
-    let intervalo;
+    useEffect(() => {
+      let intervalo;
 
-    async function verificarBackend() {
-      try {
-        const response = await fetch(`${API_URL}/ia/wake/`);
-        const data = await response.json();
+      async function verificarBackend() {
+        try {
+          const response = await fetch(`${API_URL}/ia/wake/`);
+          const data = await response.json();
 
-        if (data.status === "ready") {
-          setBackendActivo(true);
+          if (data.status === "ready") {
+            setBackendActivo(true);
+            setVerificandoBackend(false);
+            clearInterval(intervalo);
+          }
+        } catch (error) {
+          setBackendActivo(false);
           setVerificandoBackend(false);
-          clearInterval(intervalo);
         }
-      } catch (error) {
-        setBackendActivo(false);
-        setVerificandoBackend(false);
       }
-    }
 
-    verificarBackend();
-    verificarOrdenDelDia();
-    intervalo = setInterval(() => {
-      if (!backendActivo) {
+      verificarBackend();
+      verificarOrdenDelDia();
+
+      intervalo = setInterval(() => {
         verificarBackend();
-      }
-    }, 10000);
+      }, 10000);
 
-    return () => clearInterval(intervalo);
-  }, [backendActivo]);
+      return () => clearInterval(intervalo);
 
+    }, []);
 
 
 
@@ -80,27 +105,90 @@ export default function NuevaOrden() {
   ===================================================== */
 
   const [cargandoIA, setCargandoIA] = useState(false);
+  const audioCompletadoRef = useRef(null);
+  const [mostrarModalIA, setMostrarModalIA] = useState(false);
 
   async function cargarPrediccionIA() {
     try {
       setCargandoIA(true);
+
+      // 🔥 GUARDAR ESTADO ANTES DE IA
+      const productosAntesIA = JSON.parse(JSON.stringify(productos));
+
       const response = await fetch(`${API_URL}/ia/predict/?epochs=20&top=0`);
       const data = await response.json();
 
       if (data.results && Array.isArray(data.results)) {
-        // 🔥 CORRECCIÓN: Mapear sobre los productos existentes
+
         const nuevaListaIA = productos.map(p => {
-          const pred = data.results.find(r => r.Producto === p.nombre);
-          return pred 
-            ? { ...p, cantidad: parseInt(pred.Pred_Sig_Semana) || 0 }
+          const pred = data.results.find(
+            r =>
+              r.Producto?.trim().toLowerCase() ===
+              p.nombre?.trim().toLowerCase()
+          );
+          console.log({
+            productoFrontend: p.nombre,
+            prediccionEncontrada: pred
+          });
+          const historial = pred?.historial_registros || 0;
+
+          const confianza =
+            pred?.confianza_prediccion || "normal";
+
+          // 🔥 si tiene poca data NO usar predicción
+          const cantidadIA =
+            confianza === "muy_baja" ||
+            confianza === "baja"
+              ? 0
+              : parseInt(pred?.Pred_Sig_Semana) || 0;
+
+          return pred
+            ? {
+                ...p,
+                cantidad: cantidadIA,
+
+                historial_registros: historial,
+                confianza_prediccion: confianza
+              }
             : p;
         });
+        const nuevasDiferencias = {};
 
+        nuevaListaIA.forEach((nuevoProd) => {
+          const original = productosAntesIA.find(
+            p => p.id === nuevoProd.id
+          );
+
+          if (original) {
+            nuevasDiferencias[nuevoProd.id] =
+              nuevoProd.cantidad - original.cantidad;
+          }
+        });
+
+        setDiferenciasIA(nuevasDiferencias);
         setProductos(nuevaListaIA);
+
+        //GUARDAR PRODUCTOS PRE-IA
+        setProductosIAOriginales(productosAntesIA);
+
         setOrdenIniciada(true);
-        setHayCambios(true); 
+        setHayCambios(true);
+        setOrdenGeneradaIA(true);
+        // REPRODUCIR SONIDO
+        if (audioCompletadoRef.current) {
+          audioCompletadoRef.current
+            ?.play()
+            .catch((err) => {
+              console.error("Error reproduciendo audio:", err);
+            });
+        }
+
+        // MOSTRAR MODAL
+        setMostrarModalIA(true);
       }
+
       setCargandoIA(false);
+
     } catch (error) {
       console.error("Error IA:", error);
       setCargandoIA(false);
@@ -123,7 +211,7 @@ export default function NuevaOrden() {
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [avisoGuardado, setAvisoGuardado] = useState(false);
   const [errorGuardado, setErrorGuardado] = useState(false);
-
+  const [mostrarModalCancelar, setMostrarModalCancelar] = useState(false);
   const [busqueda, setBusqueda] = useState("");
 
   const [productos, setProductos] = useState([]);
@@ -159,10 +247,31 @@ const tablaRef = useRef(null);
   const indiceUltimo = paginaActual * productosPorPagina;
   const indicePrimero = indiceUltimo - productosPorPagina;
 
-    // 🔽 ORDENAR POR PROVEEDOR (A-Z)
-    const productosOrdenados = [...productosFiltrados].sort((a, b) =>
-      (a.proveedor_nombre || "").localeCompare(b.proveedor_nombre || "")
+    const prioridadConfianza = {
+      nuevo: 0,
+      muy_baja: 1,
+      baja: 2,
+      normal: 999
+    };
+
+    const productosOrdenados = [...productosFiltrados].sort((a, b) => {
+
+    const prioridadA =
+      prioridadConfianza[a.confianza_prediccion] ?? 999;
+
+    const prioridadB =
+      prioridadConfianza[b.confianza_prediccion] ?? 999;
+
+    // 🔥 primero productos con poca data
+    if (prioridadA !== prioridadB) {
+      return prioridadA - prioridadB;
+    }
+
+    // 🔥 luego por proveedor
+    return (a.proveedor_nombre || "").localeCompare(
+      b.proveedor_nombre || ""
     );
+  });
 
     const productosPagina = productosOrdenados.slice(
       indicePrimero,
@@ -249,18 +358,37 @@ useEffect(() => {
       // 1. Obtener catálogo base
       const resProductos = await fetch(`${API_URL}/producto/`);
       const todosLosProductos = await resProductos.json();
+      const resUltima = await fetch(`${API_URL}/ultima-orden/`);
+      const ultimaOrden = await resUltima.json();
 
       if (!Array.isArray(todosLosProductos)) {
         console.error("El catálogo no es un array:", todosLosProductos);
         return;
       }
 
-      let listaBase = todosLosProductos.map((p, index) => ({
-        id: p.id || `prod-${index}`,
-        nombre: p.nombre,
-        proveedor_nombre: p.proveedor_nombre || "General",
-        cantidad: 0
-      }));
+      let listaBase = todosLosProductos.map((p, index) => {
+
+        // buscar producto en última orden REAL
+        const itemUltimaOrden = ultimaOrden?.items?.find(
+          item =>
+            item.nombre?.trim().toLowerCase() ===
+            p.nombre?.trim().toLowerCase()
+        );
+
+        return {
+          id: p.id || `prod-${index}`,
+          nombre: p.nombre,
+          proveedor_nombre: p.proveedor_nombre || "General",
+          cantidad: 0,
+
+          // usar datos reales
+          ultima_cantidad: itemUltimaOrden?.cantidad || 0,
+
+          // 🔥 NUEVO
+          historial_registros: 0,
+          confianza_prediccion: "normal"
+        };
+      });
 
       // 2. Obtener datos de la orden activa
       try {
@@ -270,6 +398,7 @@ useEffect(() => {
         if (dataActual && dataActual.activa && Array.isArray(dataActual.productos)) {
           console.log("Orden activa detectada:", dataActual.productos);
           setOrdenIniciada(true);
+          setOrdenGeneradaIA(false);
 
           // Cruce de datos blindado (comparamos nombres ignorando espacios y mayúsculas)
           listaBase = listaBase.map(pBase => {
@@ -287,6 +416,7 @@ useEffect(() => {
           });
         } else {
           setOrdenIniciada(false);
+          
         }
       } catch (err) { // 🔥 CORREGIDO: Aquí estaba el error del token
         console.warn("No se pudo recuperar la orden activa o no hay ninguna.");
@@ -296,6 +426,7 @@ useEffect(() => {
       setProductos(listaBase);
       setProductosOriginales(JSON.parse(JSON.stringify(listaBase)));
       setHayCambios(false);
+      setOrdenGeneradaIA(false);
 
     } catch (error) {
       console.error("Error general en inicializarDatos:", error);
@@ -317,7 +448,6 @@ async function guardarOrdenBackend() {
       alert("No hay productos con cantidad mayor a 0");
       return false;
     }
-
     // 🔥 NUEVO: calcular proveedores aquí
     const proveedoresUsados = [
       ...new Set(
@@ -360,7 +490,6 @@ async function guardarOrdenBackend() {
       alert(`Error: ${mensaje}`);
       return false;
     }
-
     console.log("✅ Orden guardada:", data);
     return true;
 
@@ -377,11 +506,18 @@ async function guardarOrdenBackend() {
   async function guardarOrden() {
   const ok = await guardarOrdenBackend();
   if (ok) {
-    setProductosOriginales([...productos]); // 🔥 Ahora lo actual coincidirá con lo guardado
-    setHayCambios(false); 
-    setErrorGuardado(false);
-    setAvisoGuardado(true);
-    setTimeout(() => setAvisoGuardado(false), 2500);
+  setProductosOriginales([...productos]);
+  setHayCambios(false);
+  setErrorGuardado(false);
+  setAvisoGuardado(true);
+
+  setTimeout(() => {
+    setAvisoGuardado(false);
+
+    // 🔥 RECARGAR APP
+    setSidebarRefreshKey(prev => prev + 1);
+
+  }, 1200);
   }else {
       setErrorGuardado(true);
       setAvisoGuardado(true);
@@ -395,7 +531,7 @@ async function guardarOrdenBackend() {
       alert("El servidor no está disponible");
       return;
     }
-
+    setDiferenciasIA({});
     // Limpia UI mientras carga
     setOrdenIniciada(false);
     setProductos(productosOriginales);
@@ -403,10 +539,61 @@ async function guardarOrdenBackend() {
     setPaginaActual(1);
 
     // 🔥 IMPORTANTE: vuelve a llamar IA
-    await cargarPrediccionIA();
+    
     setHayCambios(false);
   }
 
+  async function cancelarOrdenActual() {
+    try {
+
+      // 🔥 limpiar backend
+      await fetch(`${API_URL}/prediccion/limpiar/`, {
+        method: "POST"
+      });
+
+      // 🔥 reset productos
+      const productosReset = productos.map(p => ({
+        ...p,
+        cantidad: 0
+      }));
+
+      setProductos(productosReset);
+      setProductosOriginales(
+        JSON.parse(JSON.stringify(productosReset))
+      );
+
+      // 🔥 reset estados
+      setOrdenIniciada(false);
+      setHayCambios(false);
+      setBusqueda("");
+      setPaginaActual(1);
+      setOrdenGeneradaIA(false);
+
+      // 🔥 cerrar modal
+      setMostrarModalCancelar(false);
+
+      // 🔥 aviso estilo guardado
+      setErrorGuardado(false);
+      setAvisoGuardado(true);
+
+      setTimeout(() => {
+        setAvisoGuardado(false);
+      }, 2500);
+
+      // 🔥 opcional: refrescar datos reales
+      setSidebarRefreshKey(prev => prev + 1);
+
+    } catch (error) {
+      console.error("Error cancelando orden:", error);
+
+      setErrorGuardado(true);
+      setAvisoGuardado(true);
+
+      setTimeout(() => {
+        setAvisoGuardado(false);
+      }, 2500);
+    }
+  }
 
   async function finalizarOrdenBackend() {
     try {
@@ -438,14 +625,22 @@ async function guardarOrdenBackend() {
     }
   }
 
-/* --- REEMPLAZA ESTA FUNCIÓN EN TU CÓDIGO --- */
+
 async function confirmarFinalizar() {
+
+  // 🔥 evitar doble click
+  if (finalizando) return;
+
+  setFinalizando(true);
+
   try {
     const ok = await finalizarOrdenBackend();
 
-    if (!ok) return;
+    if (!ok) {
+      setFinalizando(false);
+      return;
+    }
 
-    // 🔥 NUEVO: obtener proveedores usados
     const proveedoresUsados = [
       ...new Set(
         productos
@@ -454,16 +649,18 @@ async function confirmarFinalizar() {
       )
     ];
 
-
-
     await fetch(`${API_URL}/prediccion/limpiar/`, {
       method: "POST"
     });
-    console.log("Proveedores usados:", proveedoresUsados);
+
     generarPDFDesdeDatos({
       productos: productos,
-      proveedor: proveedoresUsados.join(", "), // 🔥 DIRECTO
-      fecha: new Date().toLocaleDateString()
+      proveedor: proveedoresUsados.join(", "),
+      fecha: new Date().toLocaleDateString("es-MX", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      })
     });
 
     setOrdenHoyRealizada(true);
@@ -474,66 +671,168 @@ async function confirmarFinalizar() {
     setMostrarAviso(true);
     setTimeout(() => setMostrarAviso(false), 2500);
 
-    const productosReset = productos.map(p => ({ ...p, cantidad: 0 }));
+    const productosReset = productos.map(p => ({
+      ...p,
+      cantidad: 0
+    }));
+
     setProductos(productosReset);
-    setProductosOriginales(JSON.parse(JSON.stringify(productosReset)));
+    setProductosOriginales(
+      JSON.parse(JSON.stringify(productosReset))
+    );
+
+    window.location.reload();
 
   } catch (error) {
     console.error("Error al finalizar:", error);
+
+    // 🔥 volver a habilitar si falla
+    setFinalizando(false);
   }
 }
 
+async function borrarOrdenDelDia() {
+  try {
+
+    const response = await fetch(`${API_URL}/orden/borrar-hoy/`, {
+      method: "POST",
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.error || "No se pudo borrar la orden");
+      return;
+    }
+
+    console.log("Orden eliminada:", data);
+
+    // 🔥 limpiar estados
+    setOrdenHoyRealizada(false);
+    setOrdenIniciada(false);
+    setHayCambios(false);
+    setOrdenGeneradaIA(false);
+    setDiferenciasIA({});
+
+    // 🔥 reset productos
+    const productosReset = productos.map(p => ({
+      ...p,
+      cantidad: 0
+    }));
+
+    setProductos(productosReset);
+    setProductosOriginales(
+      JSON.parse(JSON.stringify(productosReset))
+    );
+
+    // 🔥 refrescar pantalla
+    setSidebarRefreshKey(prev => prev + 1);
+    
+
+  } catch (error) {
+    console.error("Error borrando orden:", error);
+    alert("Error al borrar la orden");
+  }
+}
+
+
   return (
+      <>
+    <audio
+      ref={audioCompletadoRef}
+      src="/notificacion.mp3"
+      preload="auto"
+    />
+    
     <div className="layout">
       <Sidebar
+        key={sidebarRefreshKey}
         sidebarAbierto={sidebarAbierto}
         toggleSidebar={() => setSidebarAbierto(!sidebarAbierto)}
       />
 
       <main className={`contenido ${sidebarAbierto ? "con-sidebar" : "sin-sidebar"}`}>
         <div className="barra-superiorNO">
+
+        {ordenHoyRealizada && esAdmin && (
+          <button
+            className="btn-normalNO btn-cancelarNO"
+            onClick={borrarOrdenDelDia}
+          >
+            Borrar Orden del Día
+          </button>
+        )}
+
+        {ordenHoyRealizada && (
+          <div className="aviso-orden-dia">
+            <FaTimes className="icono-btn" />
+
+            <span>
+              Ya existe una orden generada hoy.
+              {esAdmin && (
+                <>
+                  {" "}
+                  Para crear otra debes borrar la orden del día.
+                </>
+              )}
+            </span>
+          </div>
+        )}
+
+          <div className="header-contenido">
+          <FaSearch className="icono-buscador" />
+
           <input
             type="text"
             placeholder="Buscar producto o proveedor"
-            className="input-proveedorNO"
+            id="buscadorr"
+            className="input-buscador"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
+        </div>
 
-          {!ordenIniciada ? (
-            <>
+          {ordenHoyRealizada ? (
               <button
                 className="btn-normalNO"
-                onClick={handleGenerarOrden}
-                // 🚀 Bloqueo si el backend no está listo, si está cargando o si ya se hizo hoy
-                disabled={!backendActivo || cargandoIA || ordenHoyRealizada}
-                style={ordenHoyRealizada ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                disabled
+                style={{ opacity: 0.5, cursor: "not-allowed" }}
               >
-                {verificandoBackend ? "Conectando..." : cargandoIA ? "Generando con IA..." : "Generar Orden"}
+                Generar Orden
               </button>
-              
-              {hayCambios && (
-                <>
-                  <button 
-                    className="btn-normalNO" 
-                    onClick={guardarOrden}
-                    disabled={ordenHoyRealizada}
-                    style={ordenHoyRealizada ? { opacity: 0.5, cursor: "not-allowed" } : {}}
-                  >
-                    Guardar Borrador
-                  </button>
-                  <button 
-                    className="btn-normalNO" 
-                    onClick={handleFinalizar}
-                    disabled={ordenHoyRealizada}
-                    style={ordenHoyRealizada ? { opacity: 0.5, cursor: "not-allowed" } : {}}
-                  >
-                    Finalizar
-                  </button>
-                </>
-              )}
-            </>
-          ) : (
+            ) : !ordenIniciada ? (
+              <>
+                <button
+                  className="btn-normalNO"
+                  onClick={handleGenerarOrden}
+                  disabled={!backendActivo || cargandoIA}
+                >
+                  {verificandoBackend
+                    ? "Conectando..."
+                    : cargandoIA
+                    ? "Generando con IA..."
+                    : "Generar Orden"}
+                </button>
+
+                {hayCambios && (
+                  <>
+                    <button
+                      className="btn-normalNO"
+                      onClick={guardarOrden}
+                    >
+                      Guardar Borrador
+                    </button>
+
+                    <button
+                      className="btn-normalNO"
+                      onClick={handleFinalizar}
+                    >
+                      Finalizar
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
             <>
               <button 
                 className="btn-normalNO" 
@@ -551,6 +850,21 @@ async function confirmarFinalizar() {
               >
                 Resetear Orden IA
               </button>
+
+              {ordenIniciada && !ordenGeneradaIA && (
+                <button
+                  className="btn-normalNO btn-cancelarNO"
+                  onClick={() => setMostrarModalCancelar(true)}
+                  disabled={ordenHoyRealizada}
+                  style={
+                    ordenHoyRealizada
+                      ? { opacity: 0.5, cursor: "not-allowed" }
+                      : {}
+                  }
+                >
+                  Cancelar Orden
+                </button>
+              )}
               <button 
                 className="btn-normalNO" 
                 onClick={handleFinalizar}
@@ -569,6 +883,7 @@ async function confirmarFinalizar() {
             <tr>
               <th>Producto</th>
               <th>Proveedor</th>
+              <th>Último pedido</th>
               <th>Cantidad</th>
             </tr>
           </thead>
@@ -577,31 +892,89 @@ async function confirmarFinalizar() {
               <tr key={p.id}>
                 <td>{p.nombre}</td>
                 <td>{p.proveedor_nombre}</td>
-                
+                <td className="ultima-cantidad">{p.ultima_cantidad || 0}</td>
                 {/* AQUÍ VA EL BLOQUE DEL INPUT */}
-                <td>
-                  <input
-                    type="number"
-                    min="0"
-                    className="input-tablaNO"
-                    value={p.cantidad} // 🔥 Asegúrate que diga p.cantidad
-                    onChange={(e) => {
-                      const valor = Number(e.target.value);
-                      const cantidadSegura = isNaN(valor) ? 0 : Math.max(0, valor);
+                  <td>
+                    <div className="contenedor-cantidad">
+                      <input
+                        type="number"
+                        min="0"
+                        className="input-tablaNO"
+                        value={p.cantidad}
+                        onChange={(e) => {
+                          const valor = Number(e.target.value);
+                          const cantidadSegura = isNaN(valor) ? 0 : Math.max(0, valor);
 
-                      const nuevosProductos = productos.map((prod) =>
-                        prod.id === p.id
-                          ? { ...prod, cantidad: cantidadSegura }
-                          : prod
+                          const nuevosProductos = productos.map((prod) =>
+                            prod.id === p.id
+                              ? { ...prod, cantidad: cantidadSegura }
+                              : prod
+                          );
+
+                          setProductos(nuevosProductos);
+
+                          const existeCambio =
+                            JSON.stringify(nuevosProductos) !==
+                            JSON.stringify(productosOriginales);
+
+                          setHayCambios(existeCambio);
+                        }}
+                      />
+
+                      {(() => {
+                      const diferencia = diferenciasIA[p.id] || 0;
+                      const productoOriginalIA = productosIAOriginales.find(
+                        prod => prod.id === p.id
                       );
 
-                      setProductos(nuevosProductos);
+                      const usuarioCambioValor =
+                        productoOriginalIA &&
+                        p.cantidad !== productoOriginalIA.cantidad;
 
-                      const existeCambio = JSON.stringify(nuevosProductos) !== JSON.stringify(productosOriginales);
-                      setHayCambios(existeCambio);
-                    }}
-                  />
-                </td>
+                      const esImpreciso =
+                        p.confianza_prediccion === "muy_baja" ||
+                        p.confianza_prediccion === "baja";
+
+                      return (
+                        <div className="estado-prediccion">
+                          
+                          {/* 🔥 SOLO mostrar diferencia si SÍ hay data */}
+                          {!esImpreciso &&
+                          ordenGeneradaIA &&
+                          usuarioCambioValor && (
+                            diferencia === 0 ? (
+                              <span className="dif-placeholder">---</span>
+                            ) : (
+                              <span
+                                className={
+                                  diferencia > 0
+                                    ? "dif-verde"
+                                    : "dif-roja"
+                                }
+                              >
+                                {diferencia > 0 ? "▲" : "▼"}{" "}
+                                {Math.abs(diferencia)}
+                              </span>
+                            )
+                          )}
+
+                          {p.confianza_prediccion === "muy_baja" && (
+                            <span className="aviso-impreciso rojo">
+                              ⚠ Muy poca data ({p.historial_registros})
+                            </span>
+                          )}
+
+                          {p.confianza_prediccion === "baja" && (
+                            <span className="aviso-impreciso amarillo">
+                              ⚠ Poca data ({p.historial_registros})
+                            </span>
+                          )}
+
+                        </div>
+                      );
+                    })()}
+                    </div>
+                  </td>
                 {/* FIN DEL BLOQUE */}
                 
               </tr>
@@ -616,7 +989,8 @@ async function confirmarFinalizar() {
               disabled={paginaActual === 1}
               onClick={() => setPaginaActual(paginaActual - 1)}
             >
-              ◀ Anterior
+              <FaChevronLeft className="icono-btn" />
+              Anterior
             </button>
 
             <span>
@@ -627,7 +1001,8 @@ async function confirmarFinalizar() {
               disabled={paginaActual === totalPaginas}
               onClick={() => setPaginaActual(paginaActual + 1)}
             >
-              Siguiente ▶
+              Siguiente
+              <FaChevronRight className="icono-btn" />
             </button>
           </div>
         )}
@@ -637,7 +1012,10 @@ async function confirmarFinalizar() {
           {mostrarModalBloqueo && (
             <div className="modal-overlay">
               <div className="modal">
-                <h3 style={{ color: "#d9534f" }}>⚠️ Acción denegada</h3>
+                <h3 className="titulo-error-modal">
+                  <FaTimes className="icono-btn" />
+                  Acción denegada
+                </h3>
                 <p className="pNO">Ya se ha procesado una orden el día de hoy. No es posible generar una nueva hasta mañana.</p>
                 <div className="modal-buttonsNO">
                   <button className="btn-normalNO" onClick={() => setMostrarModalBloqueo(false)}>
@@ -658,13 +1036,68 @@ async function confirmarFinalizar() {
               <button className="btn-normalNO" onClick={cancelarFinalizar}>
                 Cancelar
               </button>
-              <button className="btn-normalNO" onClick={confirmarFinalizar}>
-                Finalizar
+              <button
+              className="btn-normalNO"
+              onClick={confirmarFinalizar}
+              disabled={finalizando}
+            >
+              {finalizando ? "Finalizando..." : "Finalizar"}
+            </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mostrarModalCancelar && (
+        <div className="modal-overlay">
+          <div className="modal modal-finalizar">
+            <h3>¿Cancelar orden actual?</h3>
+
+            <p className="pNO">
+              Se eliminará la orden en curso y los cambios no guardados.
+            </p>
+
+            <div className="modal-buttonsNO">
+              <button
+                className="btn-normalNO"
+                onClick={() => setMostrarModalCancelar(false)}
+              >
+                Volver
+              </button>
+
+              <button
+                className="btn-normalNO btn-cancelarNO"
+                onClick={cancelarOrdenActual}
+              >
+                Cancelar Orden
               </button>
             </div>
           </div>
         </div>
       )}
+      {mostrarModalIA && (
+        <div className="modal-overlay">
+          <div className="modal modal-finalizar">
+
+            <h3>IA completada</h3>
+
+            <p className="pNO">
+              La generación de la orden terminó correctamente.
+            </p>
+
+            <div className="modal-buttonsNO">
+              <button
+                className="btn-normalNO"
+                onClick={() => setMostrarModalIA(false)}
+              >
+                Cerrar
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
 
       {mostrarAviso && (
         <div className="avisoNO">
@@ -682,5 +1115,6 @@ async function confirmarFinalizar() {
         </div>
       )}
     </div>
+    </>
   );
 }

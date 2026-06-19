@@ -119,3 +119,12 @@ button {
   justify-content: center;
   flex-wrap: wrap;
 }
+.btn-agregar,
+.bton-acciones,
+.paginacion button,
+.modal-contenido button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* 🔥 separación icono-texto */
+}

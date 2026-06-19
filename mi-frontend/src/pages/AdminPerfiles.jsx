@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import "../styles/AdminPerfiles.css";
 import Sidebar from "./Sidebar";
+import {
+  FaPlus,
+  FaTrash,
+  FaSave,
+  FaTimes,
+  FaUserShield,
+  FaUserMinus
+} from "react-icons/fa";
 
 export default function AdminPerfiles() {
 
@@ -16,27 +24,12 @@ export default function AdminPerfiles() {
 
   const toggleSidebar = () => setSidebarAbierto(!sidebarAbierto);
 
-  // -------- USUARIO ACTUAL --------
-  const [usuarioActual, setUsuarioActual] = useState(null);
+// -------- USUARIO ACTUAL --------
+const usuarioActual = {
+  username: localStorage.getItem("username")
+};
 
-  useEffect(() => {
-
-    fetch("http://127.0.0.1:8000/api/usuario-actual/", {
-      credentials: "include"
-    })
-      .then(res => res.json())
-      .then(data => {
-
-        console.log("Usuario actual:", data);
-
-        setUsuarioActual(data.username);
-
-      })
-      .catch((err) => {
-        console.error("Error al obtener usuario actual:", err);
-      });
-
-  }, []);
+console.log("Usuario actual:", usuarioActual);
 
   // -------- USUARIOS DE LA BD --------
   const [usuarios, setUsuarios] = useState([]);
@@ -138,7 +131,7 @@ const confirmarEliminar = () => {
     .catch(err => console.error(err));
 
 };
-
+  console.log(usuarioActual);
   return (
     <div className="layout">
 
@@ -153,7 +146,8 @@ const confirmarEliminar = () => {
           className="btn-agregar"
           onClick={() => setModalCrear(true)}
         >
-          ➕ Crear usuario
+          <FaPlus className="icono-btn" />
+          Crear usuario
         </button>
         </div>
         {modalCrear && (
@@ -216,13 +210,15 @@ const confirmarEliminar = () => {
                 className="btn-guardar"
                 onClick={crearUsuario}
               >
-                💾 Crear
+                <FaSave className="icono-btn" />
+                Crear
               </button>
 
               <button
                 className="btn-cerrar"
                 onClick={() => setModalCrear(false)}
               >
+                <FaTimes className="icono-btn" />
                 Cancelar
               </button>
 
@@ -269,27 +265,31 @@ const confirmarEliminar = () => {
                           className="bton-acciones"
                           onClick={() => hacerAdmin(user.id)}
                         >
-                          👑 Admin
+                          <FaUserShield className="icono-btn" />
+                          Admin
                         </button>
                       )}
 
                       {user.rol === "admin" &&
-                        user.username !== usuarioActual && (
+                        user.username !== usuarioActual.username && (
                           <button
                             className="bton-acciones"
                             onClick={() => bajarAdmin(user.id)}
                           >
-                            🔽 Quitar admin
+                            <FaUserMinus className="icono-btn" />
+                            Quitar admin
                           </button>
                         )}
 
-                      <button
-                        className="bton-acciones"
-                        onClick={() => setModalEliminar(user)}
-                        disabled={user.username === usuarioActual}
-                      >
-                        ❌ Eliminar
-                      </button>
+                      {user.username !== usuarioActual.username && (
+                        <button
+                          className="bton-acciones"
+                          onClick={() => setModalEliminar(user)}
+                        >
+                          <FaTrash className="icono-btn" />
+                          Eliminar
+                        </button>
+                      )}
 
                     </div>
 
@@ -327,6 +327,7 @@ const confirmarEliminar = () => {
                 className="btn-cancelar"
                 onClick={() => setModalEliminar(null)}
               >
+                <FaTimes className="icono-btn" /> 
                 Cancelar
               </button>
 
@@ -334,6 +335,7 @@ const confirmarEliminar = () => {
                 className="btn-eliminar"
                 onClick={confirmarEliminar}
               >
+                <FaTrash className="icono-btn" />
                 Eliminar
               </button>
 

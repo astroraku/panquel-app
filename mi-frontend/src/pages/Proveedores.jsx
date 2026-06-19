@@ -2,6 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import "../styles/Proveedores.css";
 import Sidebar from "./Sidebar";
 import { useNavigate } from "react-router-dom";
+import {
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaChevronLeft,
+  FaChevronRight,
+  FaSave,
+  FaTimes
+} from "react-icons/fa";
 
 // ✔ IMPORT CORRECTO PARA TAURI 2
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -9,7 +18,8 @@ const API_URL = "http://127.0.0.1:8000/api";
 
 export default function Proveedores() {
   const navigate = useNavigate();
-
+  const rol = localStorage.getItem("rol");
+  const esAdmin = rol === "admin";
   const [proveedores, setProveedores] = useState([]);
 
   const [nuevoProveedor, setNuevoProveedor] = useState({
@@ -25,9 +35,13 @@ export default function Proveedores() {
   // 🔹 Modal editar proveedor
   const [proveedorEditando, setProveedorEditando] = useState(null);
 
-  // 🔹 PAGINACIÓN (DINÁMICA 🔥)
+  // 🔹 PAGINACIÓN (DINÁMICA)
   const [proveedoresPorPagina, setProveedoresPorPagina] = useState(5);
   const [paginaActual, setPaginaActual] = useState(1);
+
+  const [mostrarEliminar, setMostrarEliminar] = useState(false);
+  const [proveedorEliminar, setProveedorEliminar] = useState(null);
+  const [productosRelacionados, setProductosRelacionados] = useState([]);
 
   // 🔥 REF PARA MEDIR
   const tablaRef = useRef(null);
@@ -149,31 +163,86 @@ useEffect(() => {
   // Eliminar proveedor
   const eliminarProveedor = async (id) => {
     try {
+
       await fetch(`${API_URL}/proveedores/${id}/`, {
         method: "DELETE",
       });
-      setProveedores(proveedores.filter((p) => p.id !== id));
+
+      setProveedores(
+        proveedores.filter((p) => p.id !== id)
+      );
+
       setPaginaActual(1);
+
+      setMostrarEliminar(false);
+      setProveedorEliminar(null);
+
     } catch (error) {
+
       console.error("Error eliminando proveedor:", error);
+
+    }
+  };
+
+  const abrirModalEliminar = async (prov) => {
+    try {
+      setProveedorEliminar(prov);
+
+      // 🔥 obtener productos
+      const res = await fetch(`${API_URL}/producto/`);
+      const productos = await res.json();
+
+      // 🔥 filtrar productos del proveedor
+      const relacionados = productos.filter(
+        (p) =>
+          String(p.proveedor_nombre).trim().toLowerCase() ===
+          String(prov.nombre).trim().toLowerCase()
+      );
+
+      setProductosRelacionados(relacionados);
+
+      setMostrarEliminar(true);
+
+    } catch (error) {
+      console.error("Error obteniendo productos:", error);
     }
   };
 
   // Guardar cambios
-  const guardarEdicion = async () => {
-    try {
-      await fetch(`${API_URL}/proveedores/${proveedorEditando.id}/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nombre: proveedorEditando.nombre,
-          telefono: proveedorEditando.telefono,
-          email: proveedorEditando.email,
-        }),
-      });
 
+  const guardarEdicion = async () => {
+
+    try {
+
+      const response = await fetch(
+        `${API_URL}/proveedores/${proveedorEditando.id}/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: proveedorEditando.id, // 🔥 opcional
+            nombre: proveedorEditando.nombre,
+            telefono: proveedorEditando.telefono,
+            email: proveedorEditando.email,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      console.log("RESPUESTA BACKEND:", result);
+
+      // 🔥 si hubo error
+      if (!response.ok) {
+
+        alert(result.error || "Error editando proveedor");
+
+        return;
+      }
+
+      // 🔥 recargar proveedores
       const res = await fetch(`${API_URL}/proveedores/`);
       const data = await res.json();
 
@@ -185,10 +254,13 @@ useEffect(() => {
       }));
 
       setProveedores(formateados);
+
       setProveedorEditando(null);
 
     } catch (error) {
+
       console.error("Error editando:", error);
+
     }
   };
 
@@ -199,7 +271,8 @@ useEffect(() => {
       <div className="contenido">
 
         <button className="btn-agregar" onClick={() => setModalAgregar(true)}>
-          ➕ Agregar proveedor
+          <FaPlus className="icono-btn" />
+          Agregar proveedor
         </button>
 
         {/* TABLA */}
@@ -225,15 +298,19 @@ useEffect(() => {
                         className="bton-acciones"
                         onClick={() => setProveedorEditando({ ...prov })}
                       >
-                        ✏️ Editar
+                        <FaEdit className="icono-btn" />
+                        Editar
                       </button>
 
-                      <button
-                        className="bton-acciones"
-                        onClick={() => eliminarProveedor(prov.id)}
-                      >
-                        ❌ Eliminar
-                      </button>
+                      {esAdmin && (
+                        <button
+                          className="bton-acciones eliminar"
+                          onClick={() => abrirModalEliminar(prov)}
+                        >
+                          <FaTrash className="icono-btn" />
+                          Eliminar
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -249,7 +326,8 @@ useEffect(() => {
               disabled={paginaActual === 1}
               onClick={() => setPaginaActual(paginaActual - 1)}
             >
-              ◀ Anterior
+              <FaChevronLeft className="icono-btn" />
+              Anterior
             </button>
 
             <span>
@@ -260,7 +338,8 @@ useEffect(() => {
               disabled={paginaActual === totalPaginas}
               onClick={() => setPaginaActual(paginaActual + 1)}
             >
-              Siguiente ▶
+              Siguiente
+              <FaChevronRight className="icono-btn" />
             </button>
           </div>
         )}
@@ -332,12 +411,15 @@ useEffect(() => {
 
               <div className="modal-buttonsNO">
                 <button className="btn-guardar" onClick={agregarProveedor}>
-                  💾 Agregar
+                  <FaSave className="icono-btn" />
+                  Agregar
                 </button>
+
                 <button
                   className="btn-cerrar"
                   onClick={() => setModalAgregar(false)}
                 >
+                  <FaTimes className="icono-btn" />
                   Cancelar
                 </button>
               </div>
@@ -405,19 +487,88 @@ useEffect(() => {
               {/* 🔥 CLASE CORRECTA */}
               <div className="modal-botones">
                 <button className="btn-guardar" onClick={guardarEdicion}>
-                  💾 Guardar cambios
+                  <FaSave className="icono-btn" />
+                  Guardar cambios
                 </button>
 
                 <button
                   className="btn-cerrar"
                   onClick={() => setProveedorEditando(null)}
                 >
+                  <FaTimes className="icono-btn" />
                   Cancelar
                 </button>
+                
               </div>
+
             </div>
           </div>
         )}
+        {/* MODAL ELIMINAR */}
+{mostrarEliminar && proveedorEliminar && (
+
+  <div
+    className="modal-overlay"
+    onClick={() => setMostrarEliminar(false)}
+  >
+
+    <div
+      className="modal-contenido"
+      onClick={(e) => e.stopPropagation()}
+    >
+
+      <h2>Eliminar proveedor</h2>
+
+      <p className="modalp">
+        ¿Deseas eliminar a:
+      </p>
+
+      <p className="modalp">
+        <strong>{proveedorEliminar.nombre}</strong>?
+        {productosRelacionados.length > 0 && (
+          <div className="productos-relacionados">
+            <p className="modalp">
+              También se eliminarán los siguientes productos:
+            </p>
+
+            <ul className="lista-productos-eliminar">
+              {productosRelacionados.map((prod) => (
+                <li key={prod.id || prod.nombre}>
+                  {prod.nombre}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </p>
+
+      <div className="modal-buttonsNO">
+
+        <button
+          className="btn-cerrar"
+          onClick={() => setMostrarEliminar(false)}
+        >
+          <FaTimes className="icono-btn" />
+          Cancelar
+        </button>
+
+        <button
+          className="btn-eliminar"
+          onClick={() =>
+            eliminarProveedor(proveedorEliminar.id)
+          }
+        >
+          <FaTrash className="icono-btn" />
+          Eliminar
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
 
       </div>
     </div>

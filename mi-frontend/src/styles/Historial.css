@@ -328,3 +328,39 @@ justify-content: center;
 display: flex;
 margin-top: 20px;
 }
+
+.icono-btn {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.buscador-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icono-buscador {
+  font-size: 16px;
+  color: #8b5e34;
+}
+
+/* BOTONES CON ICONO */
+.paginacion button,
+.paginacion-centro button,
+.btn-icono,
+.btn-normalNO {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* PAGINACIÓN */
+.paginacion,
+.paginacion-centro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}

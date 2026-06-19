@@ -1,0 +1,2 @@
+ERROR HISTORIAL: could not translate host name "aws-1-us-east-2.pooler.supabase.com" to address: Name or service not known
+

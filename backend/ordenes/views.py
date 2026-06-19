@@ -30,6 +30,89 @@ MODEL_URL = "https://modelo-narx-panquel-v2.onrender.com"
 
 
 
+@api_view(["POST"])
+def editar_ultima_orden(request):
+
+    try:
+
+        fecha = request.data.get("fecha")
+        productos = request.data.get("productos", [])
+
+        if not fecha:
+            return Response(
+                {"error": "Fecha requerida"},
+                status=400
+            )
+
+        with connection.cursor() as cursor:
+
+            for p in productos:
+
+                nombre = p.get("nombre")
+                cantidad = int(p.get("cantidad", 0))
+
+                cursor.execute(
+                    f'''
+                    UPDATE pedido
+                    SET "{fecha}" = %s
+                    WHERE producto_nombre = %s
+                    ''',
+                    [cantidad, nombre]
+                )
+
+        return Response({
+            "ok": True
+        })
+
+    except Exception as e:
+
+        return Response({
+            "error": str(e)
+        }, status=500)
+
+@csrf_exempt
+def borrar_orden_hoy(request):
+
+    if request.method != "POST":
+        return JsonResponse({
+            "error": "Método no permitido"
+        }, status=405)
+
+    try:
+
+        fecha_hoy = datetime.now().strftime("%d-%b-%y")
+
+        with connection.cursor() as cursor:
+
+            # 🔥 verificar si existe la columna
+            cursor.execute("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name='pedido'
+                AND column_name=%s
+            """, [fecha_hoy])
+
+            existe = cursor.fetchone()
+
+            if not existe:
+                return JsonResponse({
+                    "error": f"No existe orden para hoy ({fecha_hoy})"
+                }, status=404)
+
+            # 🔥 borrar columna
+            cursor.execute(
+                f'ALTER TABLE pedido DROP COLUMN "{fecha_hoy}"'
+            )
+
+        return JsonResponse({
+            "success": True,
+            "fecha": fecha_hoy
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "error": str(e)
+        }, status=500)
 
 @api_view(['GET'])
 def cerrar_backend(request):
@@ -102,8 +185,7 @@ def limpiar_prediccion(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
-# POST: guardar predicción nueva
-from django.db import connection # Asegúrate de tener esta importación arriba
+
 
 @api_view(["POST"])
 def guardar_prediccion(request):
@@ -162,6 +244,10 @@ def predict_order(request):
     }
 
     try:
+
+        # =========================
+        # 1. PEDIR IA
+        # =========================
         r = requests.get(
             f"{MODEL_URL}/predict-db",
             params=params,
@@ -169,11 +255,123 @@ def predict_order(request):
         )
 
         r.raise_for_status()
+
         data = r.json()
 
-        return Response(data)
+        results = data.get("results", [])
+
+        # =========================
+        # 2. LEER TABLA PEDIDO
+        # =========================
+        with connection.cursor() as cursor:
+
+            cursor.execute("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'pedido'
+            """)
+
+            columnas = [row[0] for row in cursor.fetchall()]
+
+            columnas_fecha = [
+                c for c in columnas
+                if c and "-" in c and c[0].isdigit()
+            ]
+
+            # Traer tabla completa
+            cursor.execute("SELECT * FROM pedido")
+
+            filas = cursor.fetchall()
+
+            columnas_tabla = [col[0] for col in cursor.description]
+
+        # =========================
+        # 3. CONTAR HISTORIAL REAL
+        # =========================
+        historial_real = {}
+
+        for fila in filas:
+
+            registro = dict(zip(columnas_tabla, fila))
+
+            nombre_producto = str(
+                registro.get("producto_nombre", "")
+            ).strip()
+
+            contador = 0
+
+            for fecha in columnas_fecha:
+
+                try:
+                    valor = int(registro.get(fecha) or 0)
+                except:
+                    valor = 0
+
+                # SOLO CONTAR PEDIDOS > 0
+                if valor > 0:
+                    contador += 1
+
+            historial_real[nombre_producto] = contador
+
+        # =========================
+        # 4. AGREGAR CONFIANZA
+        # =========================
+        productos_prioritarios = []
+        productos_normales = []
+
+        for item in results:
+
+            nombre = str(
+                item.get("Producto", "")
+            ).strip()
+
+            veces = historial_real.get(nombre, 0)
+
+            item["historial_real"] = veces
+
+            # 🔥 NUEVO
+            if nombre not in historial_real:
+
+                item["confianza_prediccion"] = "nuevo"
+                item["mensaje"] = "Producto nuevo sin historial"
+
+                productos_prioritarios.append(item)
+
+            # 🔥 MUY BAJA
+            elif veces < 3:
+
+                item["confianza_prediccion"] = "muy_baja"
+                item["mensaje"] = f"Solo tiene {veces} pedidos"
+
+                productos_prioritarios.append(item)
+
+            # 🔥 BAJA
+            elif veces < 6:
+
+                item["confianza_prediccion"] = "baja"
+                item["mensaje"] = f"Solo tiene {veces} pedidos"
+
+                productos_prioritarios.append(item)
+
+            # 🔥 NORMAL
+            else:
+
+                item["confianza_prediccion"] = "normal"
+                item["mensaje"] = ""
+
+                productos_normales.append(item)
+
+        # =========================
+        # 5. PRIORITARIOS ARRIBA
+        # =========================
+        results_final = productos_prioritarios + productos_normales
+
+        return Response({
+            "results": results_final
+        })
 
     except Exception as e:
+
         return Response({
             "error": str(e)
         }, status=500)
@@ -219,15 +417,56 @@ def crear_producto(request):
         except Proveedor.DoesNotExist:
             return JsonResponse({"error": "Proveedor inválido"}, status=400)
 
-        # ✅ Crear producto (cantidad ahora es texto)
+        # ✅ Crear producto
         try:
             prod = Producto.objects.create(
                 nombre=nombre,
-                cantidad=cantidad,  # 👈 ahora acepta "3 piezas"
+                cantidad=cantidad,
                 proveedor=proveedor
             )
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+
+        # =====================================================
+        # 🔥 NUEVO: INSERTAR EN TABLA pedido CON CEROS
+        # =====================================================
+        try:
+            from django.db import connection
+
+            with connection.cursor() as cursor:
+
+                # 1. Obtener columnas actuales
+                cursor.execute("SELECT * FROM pedido LIMIT 1")
+                columnas = [col[0] for col in cursor.description]
+
+                # 2. Detectar columnas de fecha
+                columnas_fecha = [
+                    c for c in columnas
+                    if c and "-" in c and c[0].isdigit()
+                ]
+
+                # 3. Construir INSERT dinámico
+                columnas_insert = ["producto_nombre", "proveedor_id", "name"] + columnas_fecha
+
+                valores = [
+                    nombre,
+                    proveedor.id,
+                    proveedor.name
+                ] + [0] * len(columnas_fecha)
+
+                placeholders = ", ".join(["%s"] * len(valores))
+                columnas_sql = ", ".join(f'"{col}"' for col in columnas_insert)
+
+                cursor.execute(f"""
+                    INSERT INTO pedido ({columnas_sql})
+                    VALUES ({placeholders})
+                """, valores)
+
+        except Exception as e:
+            # ⚠️ No rompemos la creación del producto si esto falla
+            print("Error insertando en pedido:", str(e))
+
+        # =====================================================
 
         return JsonResponse({
             "mensaje": "Producto creado correctamente",
@@ -235,7 +474,7 @@ def crear_producto(request):
                 "id": prod.nombre,
                 "nombre": prod.nombre,
                 "cantidad": prod.cantidad,
-                "proveedor": proveedor.nombre if hasattr(proveedor, "nombre") else proveedor.id
+                "proveedor": proveedor.name if hasattr(proveedor, "name") else proveedor.id
             }
         })
 
@@ -255,15 +494,57 @@ def eliminar_usuario(request, id):
 
 @csrf_exempt
 def eliminar_proveedor(request, id):
-    if request.method == "DELETE":
-        try:
-            proveedor = Proveedor.objects.get(id=id)
-            proveedor.delete()
-            return JsonResponse({"ok": True})
-        except Proveedor.DoesNotExist:
-            return JsonResponse({"error": "Proveedor no existe"}, status=404)
 
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+    try:
+        proveedor = Proveedor.objects.get(id=id)
+
+    except Proveedor.DoesNotExist:
+        return JsonResponse(
+            {"error": "Proveedor no existe"},
+            status=404
+        )
+
+    # =========================
+    # EDITAR
+    # =========================
+    if request.method == "PUT":
+
+        try:
+            data = json.loads(request.body)
+
+            proveedor.name = data.get("nombre")
+            proveedor.telephone = data.get("telefono")
+            proveedor.email = data.get("email")
+
+            proveedor.save()
+
+            return JsonResponse({
+                "ok": True,
+                "id": proveedor.id,
+                "name": proveedor.name,
+                "telephone": proveedor.telephone,
+                "email": proveedor.email,
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                "error": str(e)
+            }, status=500)
+
+    # =========================
+    # ELIMINAR
+    # =========================
+    elif request.method == "DELETE":
+
+        proveedor.delete()
+
+        return JsonResponse({
+            "ok": True
+        })
+
+    return JsonResponse({
+        "error": "Método no permitido"
+    }, status=405)
 
 @csrf_exempt
 def producto_detalle(request, id):
@@ -278,7 +559,6 @@ def producto_detalle(request, id):
         except:
             return JsonResponse({"error": "JSON inválido"}, status=400)
 
-        prod.nombre = data.get("nombre")
         prod.cantidad = data.get("cantidad")
         prod.proveedor_id = data.get("proveedor_id")
         prod.save()
@@ -631,9 +911,14 @@ def dashboard_stats(request):
 def usuario_actual(request):
 
     if not request.user.is_authenticated:
-        return JsonResponse({"username": None, "rol": "usuario"})
+        return JsonResponse({
+            "id": None,
+            "username": None,
+            "rol": "usuario"
+        })
 
     return JsonResponse({
+        "id": request.user.id,
         "username": request.user.username,
         "rol": "admin" if request.user.is_superuser else "usuario"
     })
@@ -675,6 +960,7 @@ def crear_usuario(request):
 
         if rol == "admin":
             user.is_staff = True
+            user.is_superuser = True
             user.save()
 
         return JsonResponse({
@@ -698,8 +984,16 @@ def hacer_admin(request, id):
 @csrf_exempt
 def quitar_admin(request, id):
 
+    # 🚫 impedir quitarse admin a sí mismo
+    if request.user.id == id:
+        return JsonResponse({
+            "error": "No puedes quitarte admin a ti mismo"
+        }, status=403)
+
     user = User.objects.get(id=id)
+
     user.is_superuser = False
+    user.is_staff = False
     user.save()
 
     return JsonResponse({"status": "ok"})
@@ -708,14 +1002,50 @@ def quitar_admin(request, id):
 @csrf_exempt
 def eliminar_usuario(request, id):
     if request.method == "DELETE":
-        user = User.objects.get(id=id)
-        user.delete()
-        return JsonResponse({"success": True})
+        try:
+            user = User.objects.get(id=id)
+            user.delete()
+            return JsonResponse({"success": True})
+        except User.DoesNotExist:
+            return JsonResponse({"error": "No existe"}, status=404)
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)
 
 
 
 
 def lista_productos(request):
+
+    with connection.cursor() as cursor:
+
+        # 🔥 obtener columnas
+        cursor.execute("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'pedido'
+        """)
+
+        columnas = [row[0] for row in cursor.fetchall()]
+
+        columnas_fecha = [
+            c for c in columnas
+            if c and "-" in c and c[0].isdigit()
+        ]
+
+        ultima_fecha = columnas_fecha[-1] if columnas_fecha else None
+
+        # 🔥 traer datos de pedido SOLO UNA VEZ
+        pedidos_map = {}
+
+        if ultima_fecha:
+
+            cursor.execute(f'''
+                SELECT producto_nombre, "{ultima_fecha}"
+                FROM pedido
+            ''')
+
+            for nombre, cantidad in cursor.fetchall():
+                pedidos_map[nombre] = cantidad or 0
 
     productos = Producto.objects.select_related("proveedor").values(
         "nombre",
@@ -724,18 +1054,19 @@ def lista_productos(request):
         "proveedor__name"
     )
 
-    data = [
-        {
+    data = []
+
+    for p in productos:
+
+        data.append({
             "nombre": p["nombre"],
             "cantidad": p["cantidad"],
             "proveedor_id": p["proveedor_id"],
-            "proveedor_nombre": p["proveedor__name"]
-        }
-        for p in productos
-    ]
+            "proveedor_nombre": p["proveedor__name"],
+            "ultima_cantidad": pedidos_map.get(p["nombre"], 0)
+        })
 
     return JsonResponse(data, safe=False)
-
 
 def lista_proveedores(request):
     proveedores = Proveedor.objects.all().values(

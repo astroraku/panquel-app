@@ -36,4 +36,7 @@ urlpatterns = [
     path('api/cerrar-backend/', views.cerrar_backend, name='cerrar_backend'),
     path("usuario/<int:id>/eliminar/", views.eliminar_usuario),
     path("proveedores/<str:id>/", views.eliminar_proveedor),
+    path("orden/borrar-hoy/", views.borrar_orden_hoy),
+    path("ultima-orden/editar/", views.editar_ultima_orden,
+),
 ]

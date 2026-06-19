@@ -9,8 +9,21 @@ export function generarPDFDesdeDatos({ proveedor, fecha, productos }) {
   doc.text("Orden de Compra", 14, 20);
 
   doc.setFontSize(12);
-  doc.text(`Proveedor: ${proveedor}`, 14, 35);
-  doc.text(`Fecha: ${fecha}`, 14, 43);
+
+  // 👇 Hace salto automático de línea
+  const proveedoresTexto = `Proveedor: ${proveedor}`;
+
+  const proveedoresLineas = doc.splitTextToSize(
+    proveedoresTexto,
+    180 // ancho máximo
+  );
+
+  doc.text(proveedoresLineas, 14, 35);
+
+  // 👇 Calcula automáticamente dónde poner la fecha
+  const alturaProveedor = proveedoresLineas.length * 7;
+
+  doc.text(`Fecha: ${fecha}`, 14, 35 + alturaProveedor);
 
   // Filtrar productos con cantidad
   const productosFiltrados = productos.filter(p => p.cantidad > 0);
@@ -23,25 +36,35 @@ export function generarPDFDesdeDatos({ proveedor, fecha, productos }) {
 
   // Tabla automática
   autoTable(doc, {
-    startY: 55,
+    startY: 50 + alturaProveedor,
+
     head: [["Producto", "Cantidad"]],
     body: rows,
 
     styles: {
       fontSize: 10,
+      valign: "middle",
     },
 
     headStyles: {
-      fillColor: [139, 94, 52], // cafecito
+      fillColor: [139, 94, 52],
+      halign: "center", // 👈 centra texto del encabezado
     },
 
     columnStyles: {
-      1: { halign: "right" } // 👈 alinea cantidad a la derecha
+      0: {
+        cellWidth: 140
+      },
+
+      1: {
+        halign: "center", // 👈 centra los números
+        cellWidth: 40
+      }
     },
 
     didDrawPage: (data) => {
-      // Footer opcional
       doc.setFontSize(10);
+
       doc.text(
         `Página ${doc.internal.getNumberOfPages()}`,
         data.settings.margin.left,
